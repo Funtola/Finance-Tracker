@@ -419,7 +419,7 @@ function BudgetTargets({cats,budgets,month,byCat,onUpdate,onClose}){
       <div style={{fontSize:14,fontWeight:800,color:"#fff",marginBottom:3}}>🎯 Budget Targets — {month}</div>
       <div style={{fontSize:11,color:"#64748b",marginBottom:16}}>Set a monthly spending limit per category. Leave 0 for no limit.</div>
       <div style={{maxHeight:420,overflowY:"auto",display:"flex",flexDirection:"column",gap:8}}>
-        {expCats.map(cat=>{
+        {[...expCats].sort((a,b)=>(byCat[b.id]||0)-(byCat[a.id]||0)).map(cat=>{
           const spent=byCat[cat.id]||0;const budget=local[cat.id]||0;const over=budget>0&&spent>budget;const pct=budget>0?Math.min(100,(spent/budget)*100):0;
           return(
             <div key={cat.id} style={{background:"#0d0d20",borderRadius:10,padding:12,border:`1px solid ${over?"#ef444440":cat.color+"20"}`}}>
@@ -755,7 +755,7 @@ function App(){
                   <span style={{fontSize:10,color:"#475569"}}>Click to drill down · ✏️ reclassify · 🗑️ delete</span>
                 </div>
                 <div style={{height:1,background:"#1e1e3a",margin:"8px 0 12px"}}/>
-                {expCats.map(cat=>{
+                {[...expCats].sort((a,b)=>(byCat[b.id]||0)-(byCat[a.id]||0)).map(cat=>{
                   const amt=byCat[cat.id]||0;if(!amt)return null;
                   const pct=expenses>0?(amt/expenses*100):0;
                   const count=transactions.filter(t=>t.month===month&&t.cat===cat.id).length;
