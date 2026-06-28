@@ -1427,6 +1427,35 @@ function PasswordLock({onUnlock}){
   );
 }
 
+function printReport(month,income,expenses,net,byCat,cats){
+  const catMap=Object.fromEntries(cats.map(c=>[c.id,c]));
+  const fmt2=n=>"NGN "+Number(n||0).toLocaleString("en-NG",{minimumFractionDigits:2});
+  const rows=Object.entries(byCat).filter(([,v])=>v>0).sort((a,b)=>b[1]-a[1]).map(([catId,amt])=>{
+    const cat=catMap[catId]||{label:catId};
+    const pct=expenses>0?(amt/expenses*100).toFixed(1):0;
+    return "<tr><td style='padding:6px 10px;border-bottom:1px solid #eee'>"+cat.label+"</td><td style='padding:6px 10px;border-bottom:1px solid #eee;text-align:right'>"+fmt2(amt)+"</td><td style='padding:6px 10px;border-bottom:1px solid #eee;text-align:right'>"+pct+"%</td></tr>";
+  }).join("");
+  const savRate=income>0?((net/income)*100).toFixed(1):"0";
+  const color=net>=0?"#10b981":"#ef4444";
+  const html="<!DOCTYPE html><html><head><title>Finance Report - "+month+"</title><style>body{font-family:Segoe UI,sans-serif;padding:30px;color:#1e293b;max-width:700px;margin:0 auto}h1{color:#6366f1;font-size:22px;margin-bottom:4px}h3{color:#475569;font-size:13px;font-weight:500;margin-bottom:24px}.cards{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:24px}.card{background:#f8fafc;border-radius:10px;padding:14px;border:1px solid #e2e8f0}.label{font-size:10px;color:#94a3b8;font-weight:600;text-transform:uppercase;letter-spacing:1px}.value{font-size:20px;font-weight:800;margin-top:4px}table{width:100%;border-collapse:collapse;margin-top:8px}th{background:#f1f5f9;padding:8px 10px;text-align:left;font-size:11px;color:#64748b;font-weight:600}td{font-size:12px}footer{margin-top:30px;font-size:10px;color:#94a3b8;border-top:1px solid #e2e8f0;padding-top:12px}@media print{button{display:none}}</style></head><body>"
+    +"<h1>Finance Report</h1><h3>Oluwafunto Motunrayo Falua - "+month+" - Cycle: 25th to 25th</h3>"
+    +"<div class='cards'>"
+    +"<div class='card'><div class='label'>Total Income</div><div class='value' style='color:#10b981'>"+fmt2(income)+"</div></div>"
+    +"<div class='card'><div class='label'>Total Expenses</div><div class='value' style='color:#ef4444'>"+fmt2(expenses)+"</div></div>"
+    +"<div class='card'><div class='label'>Net Balance</div><div class='value' style='color:"+color+"'>"+fmt2(net)+"</div></div>"
+    +"</div>"
+    +"<div class='card' style='margin-bottom:24px'><div class='label'>Savings Rate</div><div class='value' style='color:"+color+"'>"+savRate+"%</div><div style='font-size:11px;color:#94a3b8;margin-top:4px'>Target: 20%+</div></div>"
+    +"<h2 style='font-size:14px;color:#1e293b;margin-bottom:10px'>Expense Breakdown</h2>"
+    +"<table><thead><tr><th>Category</th><th style='text-align:right'>Amount</th><th style='text-align:right'>% of Expenses</th></tr></thead><tbody>"+rows+"</tbody>"
+    +"<tfoot><tr><td style='padding:8px 10px;font-weight:800'>Total</td><td style='padding:8px 10px;text-align:right;font-weight:800'>"+fmt2(expenses)+"</td><td></td></tr></tfoot></table>"
+    +"<footer>Generated on "+new Date().toLocaleDateString("en-NG")+" - funtola.github.io/Finance-Tracker</footer>"
+    +"<br><button onclick='window.print()' style='padding:10px 20px;background:#6366f1;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:13px;font-weight:700'>Print or Save as PDF</button>"
+    +"</body></html>";
+  const w=window.open("","_blank");
+  w.document.write(html);
+  w.document.close();
+}
+
 function App(){
   const[state,setState]=useState(()=>loadState());
   const{transactions,categories,budgets,apiKey,investments=[],savingsGoals=[],openingBalances={},invTypes=INV_TYPES,debts=[],netWorthHistory=[],uploadHistory=[]}=state;
@@ -1573,28 +1602,7 @@ Click OK to add anyway, Cancel to skip duplicates.`;
                 <div style={{marginLeft:"auto",display:"flex",gap:5}}>
                   <button onClick={()=>setShowBudget(true)} style={{padding:"5px 11px",borderRadius:8,border:"1px solid #252540",background:"transparent",color:"#94a3b8",fontSize:11,cursor:"pointer",fontFamily:"inherit"}}>🎯 Budgets</button>
                   <button onClick={()=>exportCSV(transactions,cats,month)} style={{padding:"5px 11px",borderRadius:8,border:"1px solid #252540",background:"transparent",color:"#94a3b8",fontSize:11,cursor:"pointer",fontFamily:"inherit"}}>📤 Export</button>
-                  <button onClick={()=>{
-                    const catMap=Object.fromEntries(cats.map(c=>[c.id,c]));
-                    const expCatRows=Object.entries(byCat).filter(([k,v])=>v>0).sort((a,b)=>b[1]-a[1]).map(([catId,amt])=>{
-                      const cat=catMap[catId]||{label:catId};
-                      const pct=expenses>0?(amt/expenses*100).toFixed(1):0;
-                      return `<tr><td style="padding:6px 10px;border-bottom:1px solid #eee">${cat.label}</td><td style="padding:6px 10px;border-bottom:1px solid #eee;text-align:right">${fmt(amt)}</td><td style="padding:6px 10px;border-bottom:1px solid #eee;text-align:right">${pct}%</td></tr>`;
-                    }).join("");
-                    const w=window.open("","_blank");
-                    w.document.write(`<!DOCTYPE html><html><head><title>Finance Report — ${month}</title><style>body{font-family:'Segoe UI',sans-serif;padding:30px;color:#1e293b;max-width:700px;margin:0 auto;}h1{color:#6366f1;font-size:22px;margin-bottom:4px;}h3{color:#475569;font-size:13px;font-weight:500;margin-bottom:24px;}.cards{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:24px;}.card{background:#f8fafc;border-radius:10px;padding:14px;border:1px solid #e2e8f0;}.label{font-size:10px;color:#94a3b8;font-weight:600;text-transform:uppercase;letter-spacing:1px;}.value{font-size:20px;font-weight:800;margin-top:4px;}table{width:100%;border-collapse:collapse;margin-top:8px;}th{background:#f1f5f9;padding:8px 10px;text-align:left;font-size:11px;color:#64748b;font-weight:600;}td{font-size:12px;}footer{margin-top:30px;font-size:10px;color:#94a3b8;border-top:1px solid #e2e8f0;padding-top:12px;}@media print{button{display:none;}}</style></head><body>
-                    <h1>💰 Finance Report</h1><h3>Oluwafunto Motunrayo Falua · ${month} · Cycle: 25th–25th</h3>
-                    <div class="cards">
-                      <div class="card"><div class="label">Total Income</div><div class="value" style="color:#10b981">${fmt(income)}</div></div>
-                      <div class="card"><div class="label">Total Expenses</div><div class="value" style="color:#ef4444">${fmt(expenses)}</div></div>
-                      <div class="card"><div class="label">Net Balance</div><div class="value" style="color:${net>=0?"#6366f1":"#ef4444"}">${fmt(net)}</div></div>
-                    </div>
-                    <div class="card" style="margin-bottom:24px;"><div class="label">Savings Rate</div><div class="value" style="color:${net>=0?"#10b981":"#ef4444"}">${income>0?(net/income*100).toFixed(1):0}%</div><div style="font-size:11px;color:#94a3b8;margin-top:4px;">Target: 20%+</div></div>
-                    <h2 style="font-size:14px;color:#1e293b;margin-bottom:10px;">Expense Breakdown</h2>
-                    <table><thead><tr><th>Category</th><th style="text-align:right">Amount</th><th style="text-align:right">% of Expenses</th></tr></thead><tbody>${expCatRows}</tbody><tfoot><tr><td style="padding:8px 10px;font-weight:800">Total</td><td style="padding:8px 10px;text-align:right;font-weight:800">${fmt(expenses)}</td><td></td></tr></tfoot></table>
-                    <footer>Generated on ${new Date().toLocaleDateString("en-NG")} · funtola.github.io/Finance-Tracker</footer>
-                    <br/><button onclick="window.print()" style="padding:10px 20px;background:#6366f1;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:13px;font-weight:700;">🖨️ Print / Save as PDF</button>
-                    </body></html>`);w.document.close();
-                  }} style={{padding:"5px 11px",borderRadius:8,border:"1px solid #252540",background:"transparent",color:"#94a3b8",fontSize:11,cursor:"pointer",fontFamily:"inherit"}}>🖨️ Print</button>
+                  <button onClick={()=>printReport(month,income,expenses,net,byCat,cats)} style={{padding:"5px 11px",borderRadius:8,border:"1px solid #252540",background:"transparent",color:"#94a3b8",fontSize:11,cursor:"pointer",fontFamily:"inherit"}}>🖨️ Print</button>
                   <Pill active={false} onClick={()=>setShowMan(v=>!v)}>+ Add Entry</Pill>
                 </div>
               </div>
