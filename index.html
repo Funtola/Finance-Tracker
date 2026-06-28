@@ -1464,23 +1464,7 @@ function App(){
   const[month,setMonth]=useState("May-Jun 2026");
   const[drill,setDrill]=useState(null);
   const[unlocked,setUnlocked]=useState(()=>sessionStorage.getItem('ftrack_unlocked')==='1');
-  const[darkMode,setDarkMode]=useState(()=>localStorage.getItem('ftrack_dark')!=='false');
-  const DM={
-    bg: darkMode?"#080814":"#f1f5f9",
-    card: darkMode?"#111126":"#ffffff",
-    border: darkMode?"#252540":"#e2e8f0",
-    text: darkMode?"#e2e8f0":"#1e293b",
-    sub: darkMode?"#94a3b8":"#64748b",
-    muted: darkMode?"#64748b":"#94a3b8",
-    input: darkMode?"#0d0d20":"#f8fafc",
-    inputBorder: darkMode?"#252540":"#cbd5e1",
-    header: darkMode?"linear-gradient(135deg,#0f0f28,#161638)":"linear-gradient(135deg,#6366f1,#4f46e5)",
-    navBtn: darkMode?"#1a1a38":"#ffffff",
-    navBtnText: darkMode?"#94a3b8":"#4f46e5",
-    pill: darkMode?"#1a1a38":"#e2e8f0",
-    pillText: darkMode?"#64748b":"#64748b",
-    hover: darkMode?"#0d0d20":"#f8fafc",
-  };
+  const[darkMode,setDarkMode]=useState(true);
   const[showMan,setShowMan]=useState(false);
   const[showSearch,setShowSearch]=useState(false);
   const[showCats,setShowCats]=useState(false);
@@ -1568,7 +1552,7 @@ Click OK to add anyway, Cancel to skip duplicates.`;
   if(!unlocked) return <PasswordLock onUnlock={()=>{sessionStorage.setItem('ftrack_unlocked','1');setUnlocked(true);}}/>;
 
   return(
-    <div style={{fontFamily:"'Segoe UI',system-ui,sans-serif",background:DM.bg,minHeight:"100vh",color:DM.text,display:"flex",flexDirection:"column",transition:"background .3s,color .3s"}}>
+    <div style={{fontFamily:"'Segoe UI',system-ui,sans-serif",background:"#080814",minHeight:"100vh",color:"#e2e8f0",display:"flex",flexDirection:"column",transition:"background .3s,color .3s"}}>
       {showSearch&&<SearchPanel transactions={transactions} cats={cats} onReclassify={reclassify} onDelete={deleteTxn} onClose={()=>setShowSearch(false)}/>}
       {showCats&&<ManageCategories cats={cats} onUpdate={updateCats} onClose={()=>setShowCats(false)}/>}
       {showBudget&&<BudgetTargets cats={cats} budgets={budgets} month={month} byCat={byCat} onUpdate={updateBudgets} onClose={()=>setShowBudget(false)}/>}
@@ -1586,7 +1570,7 @@ Click OK to add anyway, Cancel to skip duplicates.`;
           <button onClick={()=>{const np=prompt("Enter new password (min 4 chars):");if(np&&np.length>=4){const cp=prompt("Confirm new password:");if(cp===np){localStorage.setItem("ftrack_pw",np);alert("✅ Password updated!");}}else if(np){alert("Password must be at least 4 characters.");}}} style={{padding:"6px 11px",borderRadius:8,border:"none",cursor:"pointer",fontSize:11,background:"#1a1a38",color:"#94a3b8",fontFamily:"inherit"}}>🔑 Password</button>
           <button onClick={()=>{sessionStorage.removeItem('ftrack_unlocked');window.location.reload();}} style={{padding:"6px 10px",borderRadius:8,border:"none",cursor:"pointer",fontSize:11,background:"#2a0a0a",color:"#ef4444",fontFamily:"inherit"}}>🔒 Lock</button>
           <button onClick={()=>{if(confirm("⚠️ RESET ALL DATA? This cannot be undone! All your transactions, investments and settings will be deleted.")){localStorage.removeItem(KEY);localStorage.removeItem("ftrack_pw");sessionStorage.removeItem("ftrack_unlocked");window.location.reload();}}} style={{padding:"6px 10px",borderRadius:8,border:"none",cursor:"pointer",fontSize:10,background:"#1a1a38",color:"#475569",fontFamily:"inherit"}}>🗑️ Reset</button>
-          <button onClick={()=>{const nd=!darkMode;setDarkMode(nd);localStorage.setItem('ftrack_dark',String(nd));}} style={{padding:"6px 10px",borderRadius:8,border:"none",cursor:"pointer",fontSize:13,background:"#1a1a38",color:"#94a3b8",fontFamily:"inherit"}}>{darkMode?"☀️":"🌙"}</button>
+          <button onClick={()=>alert("Dark mode is the default. Light mode coming soon!")} style={{padding:"6px 10px",borderRadius:8,border:"none",cursor:"pointer",fontSize:13,background:"#1a1a38",color:"#94a3b8",fontFamily:"inherit"}}>🌙</button>
         </div>
       </div>
 
@@ -1652,9 +1636,9 @@ Click OK to add anyway, Cancel to skip duplicates.`;
                 if(months.length<=1)return null;
                 return(
                   <div style={{background:darkMode?"#0d0d20":"#f8fafc",border:`1px solid ${darkMode?"#252540":"#e2e8f0"}`,borderRadius:10,padding:"10px 14px",marginBottom:10,display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10}}>
-                    <div><div style={{fontSize:9,color:DM.muted,fontWeight:600,letterSpacing:1,textTransform:"uppercase"}}>All-Time Income</div><div style={{fontSize:14,fontWeight:800,color:"#10b981",marginTop:2}}>{fmt(allIncome)}</div></div>
-                    <div><div style={{fontSize:9,color:DM.muted,fontWeight:600,letterSpacing:1,textTransform:"uppercase"}}>All-Time Expenses</div><div style={{fontSize:14,fontWeight:800,color:"#ef4444",marginTop:2}}>{fmt(allExpenses)}</div></div>
-                    <div><div style={{fontSize:9,color:DM.muted,fontWeight:600,letterSpacing:1,textTransform:"uppercase"}}>All-Time Net</div><div style={{fontSize:14,fontWeight:800,color:allNet>=0?"#6366f1":"#ef4444",marginTop:2}}>{fmt(allNet)}</div></div>
+                    <div><div style={{fontSize:9,color:"#64748b",fontWeight:600,letterSpacing:1,textTransform:"uppercase"}}>All-Time Income</div><div style={{fontSize:14,fontWeight:800,color:"#10b981",marginTop:2}}>{fmt(allIncome)}</div></div>
+                    <div><div style={{fontSize:9,color:"#64748b",fontWeight:600,letterSpacing:1,textTransform:"uppercase"}}>All-Time Expenses</div><div style={{fontSize:14,fontWeight:800,color:"#ef4444",marginTop:2}}>{fmt(allExpenses)}</div></div>
+                    <div><div style={{fontSize:9,color:"#64748b",fontWeight:600,letterSpacing:1,textTransform:"uppercase"}}>All-Time Net</div><div style={{fontSize:14,fontWeight:800,color:allNet>=0?"#6366f1":"#ef4444",marginTop:2}}>{fmt(allNet)}</div></div>
                   </div>
                 );
               })()}
@@ -1745,9 +1729,9 @@ Click OK to add anyway, Cancel to skip duplicates.`;
                             <div key={t.id} style={{display:"flex",alignItems:"center",gap:10,padding:"8px 12px",background:darkMode?"#0d0d20":"#f8fafc",borderRadius:8,border:`1px solid ${cat.color}30`}}>
                               <div style={{fontSize:16,fontWeight:900,color:i===0?"#f59e0b":i===1?"#94a3b8":"#cd7c2f",minWidth:20}}>#{i+1}</div>
                               <div style={{flex:1}}>
-                                <div style={{fontSize:11,color:DM.text,fontWeight:600}}>{t.desc}</div>
+                                <div style={{fontSize:11,color:"#e2e8f0",fontWeight:600}}>{t.desc}</div>
                                 <div style={{display:"flex",gap:8,marginTop:2}}>
-                                  <span style={{fontSize:9,color:DM.muted}}>📅 {t.date}</span>
+                                  <span style={{fontSize:9,color:"#64748b"}}>📅 {t.date}</span>
                                   <span style={{fontSize:9,fontWeight:600,padding:"1px 6px",borderRadius:8,background:cat.color+"18",color:cat.color}}>{cat.label}</span>
                                 </div>
                               </div>
@@ -1865,12 +1849,12 @@ Click OK to add anyway, Cancel to skip duplicates.`;
                 <div style={{marginTop:14}}>
                   <div style={{fontSize:12,fontWeight:700,color:"#a5b4fc",marginBottom:10}}>📋 Upload History</div>
                   <div style={{background:darkMode?"#111126":"#fff",borderRadius:14,padding:"16px 18px",border:`1px solid ${darkMode?"#252540":"#e2e8f0"}`}}>
-                    <div style={{fontSize:10,color:DM.muted,marginBottom:10}}>Last {uploadHistory.length} uploads</div>
+                    <div style={{fontSize:10,color:"#64748b",marginBottom:10}}>Last {uploadHistory.length} uploads</div>
                     {uploadHistory.map(h=>(
                       <div key={h.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"8px 0",borderBottom:`1px solid ${darkMode?"#1a1a38":"#f1f5f9"}`}}>
                         <div>
-                          <div style={{fontSize:12,color:DM.text,fontWeight:500}}>📄 {h.month}</div>
-                          <div style={{fontSize:10,color:DM.muted,marginTop:2}}>{h.date} at {h.time}</div>
+                          <div style={{fontSize:12,color:"#e2e8f0",fontWeight:500}}>📄 {h.month}</div>
+                          <div style={{fontSize:10,color:"#64748b",marginTop:2}}>{h.date} at {h.time}</div>
                         </div>
                         <div style={{textAlign:"right"}}>
                           <div style={{fontSize:11,fontWeight:700,color:"#10b981"}}>{h.count} transactions</div>
