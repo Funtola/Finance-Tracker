@@ -766,7 +766,8 @@ function App(){
   const{transactions:txns,categories:cats,invTypes,budgets,apiKey,investments,savingsGoals,openingBalances,uploadHistory,debts}=state;
   const months=sortMonths([...new Set(txns.map(t=>t.month))]);
   const allMonths=[...new Set([...months,...FUTURE_MONTHS])];
-  const{income,byCat,expenses}=calcMonth(txns,month);
+  const{income:rawIncome,byCat,expenses}=calcMonth(txns,month);
+  const income=rawIncome+(openingBalances&&openingBalances[month]||0);
   const net=income-expenses;
   const expCats=(cats||CATS).filter(c=>c.type==="expense");
   const catMap=Object.fromEntries((cats||CATS).map(c=>[c.id,c]));
