@@ -405,46 +405,110 @@ function UploadTab({apiKey,cats,onConfirm}){
 
 // INVESTMENTS TAB
 function InvestmentsTab({investments,savingsGoals,invTypes,onUpdateInv,onUpdateGoals,onUpdateTypes}){
-  const[showAddInv,setShowAddInv]=useState(false);const[showAddGoal,setShowAddGoal]=useState(false);const[showMgTypes,setShowMgTypes]=useState(false);
-  const[inv,setInv]=useState({type:"stocks",name:"",amount:"",currentValue:"",date:"",notes:"",month:"May-Jun 2026"});
+  const[showAddInv,setShowAddInv]=useState(false);
+  const[showAddGoal,setShowAddGoal]=useState(false);
+  const[showMgTypes,setShowMgTypes]=useState(false);
+  const[showPayment,setShowPayment]=useState(null); // investment id for adding payment
+  const[payAmt,setPayAmt]=useState("");
+  const[payDate,setPayDate]=useState("");
+  const[payNote,setPayNote]=useState("");
+  const[inv,setInv]=useState({type:"tbills",name:"",principal:"",annualRate:"",startDate:"",maturityDate:"",notes:"",month:"May-Jun 2026",style:"lumpsum"});
   const[goal,setGoal]=useState({name:"",target:"",deadline:"",notes:""});
   const[newType,setNewType]=useState({label:"",color:"#6366f1"});
   const MONTHS=["May-Jun 2026",...FUTURE_MONTHS];
   const COLORS=["#10b981","#6366f1","#f59e0b","#f97316","#ec4899","#14b8a6","#84cc16","#06b6d4","#ef4444","#8b5cf6"];
-  const totalInvested=investments.reduce((s,i)=>s+i.amount,0);
-  const totalCurrent=investments.reduce((s,i)=>s+(i.currentValue||i.amount),0);
-  const totalReturn=totalCurrent-totalInvested;
-  const retPct=totalInvested>0?(totalReturn/totalInvested*100):0;
-  function addInv(){const amt=parseFloat(inv.amount),cv=parseFloat(inv.currentValue)||amt;if(!inv.name.trim()||!amt)return;onUpdateInv([...investments,{...inv,id:uid(),amount:amt,currentValue:cv}]);setInv({type:"stocks",name:"",amount:"",currentValue:"",date:"",notes:"",month:"May-Jun 2026"});setShowAddInv(false);}
+  const STYLES=[{id:"lumpsum",label:"Lump Sum Return (T-Bills, Fixed Deposit)"},{id:"monthly",label:"Monthly Payments (Loans Given, Crowdfunding)"},{id:"growth",label:"Growth Investment (Stocks, Crypto, Real Estate)"}];
+
+  // Calculations
+  const totalPrincipal=investments.reduce((s,i)=>s+(parseFloat(i.principal)||0),0);
+  const totalExpected=investments.reduce((s,i)=>{
+    const p=parseFloat(i.principal)||0,r=parseFloat(i.annualRate)||0;
+    return s+p+(p*r/100);
+  },0);
+  const totalReceived=investments.reduce((s,i)=>s+(i.payments||[]).reduce((ps,p)=>ps+p.amount,0),0);
+  const totalBalance=totalPrincipal-totalReceived; // how much still to recoup
+
+  function addInv(){
+    const p=parseFloat(inv.principal);
+    if(!inv.name.trim()||!p)return;
+    onUpdateInv([...investments,{...inv,id:uid(),principal:p,annualRate:parseFloat(inv.annualRate)||0,payments:[]}]);
+    setInv({type:"tbills",name:"",principal:"",annualRate:"",startDate:"",maturityDate:"",notes:"",month:"May-Jun 2026",style:"lumpsum"});
+    setShowAddInv(false);
+  }
   function addGoal(){const t=parseFloat(goal.target);if(!goal.name.trim()||!t)return;onUpdateGoals([...savingsGoals,{...goal,id:uid(),target:t,saved:0}]);setGoal({name:"",target:"",deadline:"",notes:""});setShowAddGoal(false);}
   function addType(){if(!newType.label.trim())return;onUpdateTypes([...invTypes,{id:"inv_"+uid(),label:newType.label,color:newType.color,custom:true}]);setNewType({label:"",color:"#6366f1"});}
-  function updCurr(id,val){onUpdateInv(investments.map(i=>i.id===id?{...i,currentValue:parseFloat(val)||i.amount}:i));}
-  function delInv(id){if(confirm("Delete investment?"))onUpdateInv(investments.filter(i=>i.id!==id));}
-  function updGoalSaved(id,val){onUpdateGoals(savingsGoals.map(g=>g.id===id?{...g,saved:parseFloat(val)||0}:g));}
+  function addPayment(invId){
+    const amt=parseFloat(payAmt);if(!amt)return;
+    const payment={id:uid(),amount:amt,date:payDate||new Date().toLocaleDateString("en-NG"),note:payNote};
+    onUpdateInv(investments.map(i=>i.id===invId?{...i,payments:[...(i.payments||[]),payment]}:i));
+    setShowPayment(null);setPayAmt("");setPayDate("");setPayNote("");
+  }
+  function delInv(id){if(confirm("Delete this investment?"))onUpdateInv(investments.filter(i=>i.id!==id));}
+  function delPayment(invId,payId){onUpdateInv(investments.map(i=>i.id===invId?{...i,payments:(i.payments||[]).filter(p=>p.id!==payId)}:i));}
   function delGoal(id){if(confirm("Delete goal?"))onUpdateGoals(savingsGoals.filter(g=>g.id!==id));}
   function delType(id){if(investments.some(i=>i.type===id)){alert("Some investments use this type.");return;}if(confirm("Delete type?"))onUpdateTypes(invTypes.filter(t=>t.id!==id));}
-  const byType=invTypes.map(t=>({...t,items:investments.filter(i=>i.type===t.id),total:investments.filter(i=>i.type===t.id).reduce((s,i)=>s+i.amount,0),curr:investments.filter(i=>i.type===t.id).reduce((s,i)=>s+(i.currentValue||i.amount),0)})).filter(t=>t.items.length>0);
+  function updGoalSaved(id,val){onUpdateGoals(savingsGoals.map(g=>g.id===id?{...g,saved:parseFloat(val)||0}:g));}
+
+  function getInvStats(item){
+    const p=parseFloat(item.principal)||0;
+    const r=parseFloat(item.annualRate)||0;
+    const received=(item.payments||[]).reduce((s,p)=>s+p.amount,0);
+    const expectedReturn=p*(r/100);
+    const expectedTotal=p+expectedReturn;
+    const balance=p-received; // principal still to recoup
+    const totalToRecoup=expectedTotal-received; // total (principal+interest) still to receive
+    const pctRecouped=expectedTotal>0?(received/expectedTotal*100):0;
+    // Days to maturity
+    let daysLeft=null,isOverdue=false;
+    if(item.maturityDate){
+      const mat=new Date(item.maturityDate);const today=new Date();
+      daysLeft=Math.ceil((mat-today)/(1000*60*60*24));
+      isOverdue=daysLeft<0;
+    }
+    return{p,r,received,expectedReturn,expectedTotal,balance,totalToRecoup,pctRecouped,daysLeft,isOverdue};
+  }
+
+  const typeMap=Object.fromEntries(invTypes.map(t=>[t.id,t]));
+
   return h("div",null,
+    // Summary cards
     h("div",{style:{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:12,marginBottom:14}},
-      [{label:"Total Invested",val:totalInvested,color:"#6366f1",icon:"Portfolio"},{label:"Current Value",val:totalCurrent,color:"#10b981",icon:"Growth"},{label:"Return "+(retPct>=0?"+":"")+retPct.toFixed(1)+"%",val:Math.abs(totalReturn),color:totalReturn>=0?"#10b981":"#ef4444",icon:"Returns"}]
-      .map(c=>h("div",{key:c.label,style:{...S.card(""),border:"1px solid "+c.color+"30",marginBottom:0}},h("div",{style:{fontSize:9,color:"#64748b",fontWeight:600,letterSpacing:1,textTransform:"uppercase"}},c.label),h("div",{style:{fontSize:16,fontWeight:800,color:c.color,marginTop:3}},fmt(c.val))))
+      [{label:"Total Principal",val:totalPrincipal,color:"#6366f1",icon:"Principal invested"},{label:"Total Expected Back",val:totalExpected,color:"#f59e0b",icon:"Principal + interest"},{label:"Total Received",val:totalReceived,color:"#10b981",icon:"Payments received so far"}]
+      .map(c=>h("div",{key:c.label,style:{...S.card(""),border:"1px solid "+c.color+"30",marginBottom:0}},
+        h("div",{style:{fontSize:9,color:"#64748b",fontWeight:600,letterSpacing:1,textTransform:"uppercase"}},c.label),
+        h("div",{style:{fontSize:16,fontWeight:800,color:c.color,marginTop:3}},fmt(c.val)),
+        h("div",{style:{fontSize:9,color:"#475569",marginTop:2}},c.icon)
+      ))
     ),
+    // Still to recoup banner
+    totalPrincipal>0&&h("div",{style:{background:"#0d0d20",border:"1px solid #f59e0b40",borderRadius:10,padding:"10px 16px",marginBottom:14,display:"flex",justifyContent:"space-between",alignItems:"center"}},
+      h("div",null,
+        h("div",{style:{fontSize:10,color:"#64748b",fontWeight:600,textTransform:"uppercase",letterSpacing:1}},"Still to recoup (principal not yet returned)"),
+        h("div",{style:{fontSize:18,fontWeight:900,color:"#f59e0b",marginTop:2}},fmt(totalPrincipal-totalReceived))
+      ),
+      h("div",{style:{textAlign:"right"}},
+        h("div",{style:{fontSize:10,color:"#64748b"}},"Total received so far"),
+        h("div",{style:{fontSize:14,fontWeight:700,color:"#10b981"}},fmt(totalReceived)+" of "+fmt(totalExpected))
+      )
+    ),
+    // Action buttons
     h("div",{style:{display:"flex",gap:8,marginBottom:14,flexWrap:"wrap"}},
-      h("button",{onClick:()=>setShowAddInv(v=>!v),style:S.btn()},"Add Investment"),
-      h("button",{onClick:()=>setShowAddGoal(v=>!v),style:S.btn("#1a1a38","#a5b4fc")},"Add Goal"),
+      h("button",{onClick:()=>setShowAddInv(v=>!v),style:S.btn()},"+ Add Investment"),
+      h("button",{onClick:()=>setShowAddGoal(v=>!v),style:S.btn("#1a1a38","#a5b4fc")},"+ Add Goal"),
       h("button",{onClick:()=>setShowMgTypes(v=>!v),style:S.btn("#1a1a38","#94a3b8")},"Manage Types")
     ),
-    showMgTypes&&h("div",{style:S.card()},
+    // Manage types
+    showMgTypes&&h("div",{style:{...S.card(),marginBottom:14}},
       h("div",{style:{fontSize:11,fontWeight:700,color:"#a5b4fc",marginBottom:10}},"Manage Investment Types"),
       h("div",{style:{display:"grid",gridTemplateColumns:"1fr auto auto",gap:8,marginBottom:10,alignItems:"center"}},
-        h("input",{value:newType.label,onChange:e=>setNewType(v=>({...v,label:e.target.value})),placeholder:"e.g. REIT, Agriculture, Gold",style:S.inp}),
+        h("input",{value:newType.label,onChange:e=>setNewType(v=>({...v,label:e.target.value})),placeholder:"e.g. REIT, Crowdfunding, Gold",style:S.inp}),
         h("input",{type:"color",value:newType.color,onChange:e=>setNewType(v=>({...v,color:e.target.value})),style:{width:36,height:34,border:"1px solid #252540",borderRadius:6,background:"#0d0d20",cursor:"pointer",padding:2}}),
         h("button",{onClick:addType,style:{...S.btn(),padding:"8px 12px"}},"Add")
       ),
       h("div",{style:{display:"flex",flexWrap:"wrap",gap:5,marginBottom:10}},
         ...COLORS.map(c=>h("div",{key:c,onClick:()=>setNewType(v=>({...v,color:c})),style:{width:20,height:20,borderRadius:4,background:c,cursor:"pointer",border:newType.color===c?"2px solid #fff":"2px solid transparent"}}))
       ),
-      h("div",{style:{maxHeight:240,overflowY:"auto"}},
+      h("div",{style:{maxHeight:200,overflowY:"auto"}},
         ...invTypes.map(t=>h("div",{key:t.id,style:{display:"flex",alignItems:"center",gap:8,padding:"7px 10px",background:"#0d0d20",borderRadius:8,marginBottom:5}},
           h("div",{style:{width:12,height:12,borderRadius:3,background:t.color,flexShrink:0}}),
           h("span",{style:{flex:1,fontSize:12,color:"#e2e8f0"}},t.label),
@@ -455,20 +519,41 @@ function InvestmentsTab({investments,savingsGoals,invTypes,onUpdateInv,onUpdateG
       ),
       h("button",{onClick:()=>setShowMgTypes(false),style:{...S.btn("#1a1a38","#94a3b8"),marginTop:10}},"Close")
     ),
-    showAddInv&&h("div",{style:S.card()},
-      h("div",{style:{fontSize:11,fontWeight:700,color:"#a5b4fc",marginBottom:10}},"Add New Investment"),
+    // Add investment form
+    showAddInv&&h("div",{style:{...S.card(),marginBottom:14}},
+      h("div",{style:{fontSize:12,fontWeight:700,color:"#a5b4fc",marginBottom:14}},"Add New Investment"),
+      // Investment style selector
+      h("div",{style:{marginBottom:14}},
+        h("div",{style:{fontSize:10,color:"#64748b",fontWeight:600,marginBottom:8,textTransform:"uppercase",letterSpacing:1}},"Investment Type"),
+        h("div",{style:{display:"flex",flexDirection:"column",gap:6}},
+          ...STYLES.map(s=>h("div",{key:s.id,onClick:()=>setInv(v=>({...v,style:s.id})),style:{padding:"10px 12px",borderRadius:8,cursor:"pointer",border:"1.5px solid "+(inv.style===s.id?"#6366f1":"#252540"),background:inv.style===s.id?"#6366f120":"#0d0d20"}},
+            h("div",{style:{fontSize:12,color:inv.style===s.id?"#a5b4fc":"#94a3b8",fontWeight:600}},s.label)
+          ))
+        )
+      ),
       h("div",{style:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:10}},
         h("select",{value:inv.type,onChange:e=>setInv(v=>({...v,type:e.target.value})),style:S.inp},...invTypes.map(t=>h("option",{key:t.id,value:t.id},t.label))),
         h("select",{value:inv.month,onChange:e=>setInv(v=>({...v,month:e.target.value})),style:S.inp},...MONTHS.map(m=>h("option",{key:m,value:m},m))),
-        h("input",{value:inv.name,onChange:e=>setInv(v=>({...v,name:e.target.value})),placeholder:"Name e.g. Zenith Bank Shares",style:S.inp}),
-        h("input",{value:inv.date,onChange:e=>setInv(v=>({...v,date:e.target.value})),placeholder:"Date e.g. 12 Jun",style:S.inp}),
-        h("input",{value:inv.amount,onChange:e=>setInv(v=>({...v,amount:e.target.value})),type:"number",placeholder:"Amount invested (NGN)",style:S.inp}),
-        h("input",{value:inv.currentValue,onChange:e=>setInv(v=>({...v,currentValue:e.target.value})),type:"number",placeholder:"Current value optional",style:S.inp}),
-        h("input",{value:inv.notes,onChange:e=>setInv(v=>({...v,notes:e.target.value})),placeholder:"Notes",style:{...S.inp,gridColumn:"span 2"}})
+        h("input",{value:inv.name,onChange:e=>setInv(v=>({...v,name:e.target.value})),placeholder:"Name e.g. UBA Fixed Deposit, Loan to John",style:S.inp}),
+        h("input",{value:inv.principal,onChange:e=>setInv(v=>({...v,principal:e.target.value})),type:"number",placeholder:"Principal amount invested (NGN)",style:S.inp}),
+        h("input",{value:inv.annualRate,onChange:e=>setInv(v=>({...v,annualRate:e.target.value})),type:"number",placeholder:"Annual interest rate % (e.g. 18)",step:"0.1",style:S.inp}),
+        h("input",{value:inv.startDate,onChange:e=>setInv(v=>({...v,startDate:e.target.value})),placeholder:"Start date e.g. Jun 25 2026",style:S.inp}),
+        h("input",{value:inv.maturityDate,onChange:e=>setInv(v=>({...v,maturityDate:e.target.value})),placeholder:"Maturity/liquidation date e.g. Dec 25 2026",style:{...S.inp,gridColumn:"span 2"}}),
+        h("input",{value:inv.notes,onChange:e=>setInv(v=>({...v,notes:e.target.value})),placeholder:"Notes e.g. GTBank T-Bill, Obiora deal terms",style:{...S.inp,gridColumn:"span 2"}})
+      ),
+      // Preview expected return
+      (inv.principal&&inv.annualRate)&&h("div",{style:{background:"#0d1f0d",border:"1px solid #10b98140",borderRadius:8,padding:"10px 14px",marginBottom:12}},
+        h("div",{style:{fontSize:10,color:"#64748b",marginBottom:4}},"Expected return preview"),
+        h("div",{style:{display:"flex",gap:20}},
+          h("div",null,h("div",{style:{fontSize:9,color:"#64748b"}},"PRINCIPAL"),h("div",{style:{fontSize:13,fontWeight:700,color:"#6366f1"}},fmt(parseFloat(inv.principal)||0))),
+          h("div",null,h("div",{style:{fontSize:9,color:"#64748b"}},"INTEREST ("+inv.annualRate+"% p.a.)"),h("div",{style:{fontSize:13,fontWeight:700,color:"#f59e0b"}},fmt((parseFloat(inv.principal)||0)*(parseFloat(inv.annualRate)||0)/100))),
+          h("div",null,h("div",{style:{fontSize:9,color:"#64748b"}},"TOTAL TO RECEIVE"),h("div",{style:{fontSize:13,fontWeight:700,color:"#10b981"}},fmt((parseFloat(inv.principal)||0)*(1+(parseFloat(inv.annualRate)||0)/100))))
+        )
       ),
       h("div",{style:{display:"flex",gap:8}},h("button",{onClick:addInv,style:S.btn()},"Add Investment"),h("button",{onClick:()=>setShowAddInv(false),style:S.btn("#1a1a38","#94a3b8")},"Cancel"))
     ),
-    showAddGoal&&h("div",{style:S.card()},
+    // Add goal form
+    showAddGoal&&h("div",{style:{...S.card(),marginBottom:14}},
       h("div",{style:{fontSize:11,fontWeight:700,color:"#a5b4fc",marginBottom:10}},"Add Savings Goal"),
       h("div",{style:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:10}},
         h("input",{value:goal.name,onChange:e=>setGoal(v=>({...v,name:e.target.value})),placeholder:"Goal e.g. Emergency Fund",style:S.inp}),
@@ -478,55 +563,118 @@ function InvestmentsTab({investments,savingsGoals,invTypes,onUpdateInv,onUpdateG
       ),
       h("div",{style:{display:"flex",gap:8}},h("button",{onClick:addGoal,style:S.btn()},"Add Goal"),h("button",{onClick:()=>setShowAddGoal(false),style:S.btn("#1a1a38","#94a3b8")},"Cancel"))
     ),
-    byType.length>0&&h("div",{style:S.card()},
-      h("div",{style:{fontSize:12,fontWeight:700,color:"#a5b4fc",marginBottom:14}},"Portfolio Breakdown"),
-      ...byType.map(t=>{const ret=t.curr-t.total,rp=t.total>0?(ret/t.total*100):0,pct=totalInvested>0?(t.total/totalInvested*100):0;
-        return h("div",{key:t.id,style:{marginBottom:16}},
-          h("div",{style:{display:"flex",justifyContent:"space-between",marginBottom:5}},
-            h("span",{style:{fontSize:12,color:t.color,fontWeight:700}},t.label+" ("+t.items.length+")"),
-            h("div",{style:{textAlign:"right"}},h("div",{style:{fontSize:12,fontWeight:800,color:t.color}},fmt(t.total)),h("div",{style:{fontSize:10,color:ret>=0?"#10b981":"#ef4444"}},(ret>=0?"+":"")+fmt(ret)+" "+(rp>=0?"+":"")+rp.toFixed(1)+"%"))
-          ),
-          h("div",{style:{background:"#0a0a18",borderRadius:20,height:5,marginBottom:8}},h("div",{style:{height:"100%",borderRadius:20,width:pct+"%",background:t.color}})),
-          ...t.items.map(item=>{const ir=(item.currentValue||item.amount)-item.amount,ip=item.amount>0?(ir/item.amount*100):0;
-            return h("div",{key:item.id,style:{display:"flex",alignItems:"center",padding:"8px 10px",background:"#0d0d20",borderRadius:8,marginBottom:5}},
-              h("div",{style:{flex:1}},h("div",{style:{fontSize:11,color:"#e2e8f0",fontWeight:600}},item.name),h("div",{style:{fontSize:10,color:"#64748b",marginTop:2}},item.date+" - "+item.month+(item.notes?" - "+item.notes:""))),
-              h("div",{style:{textAlign:"right",marginRight:8}},
-                h("div",{style:{fontSize:11,color:"#94a3b8"}},"Invested: "+fmt(item.amount)),
-                h("div",{style:{display:"flex",alignItems:"center",gap:4,marginTop:3}},
-                  h("span",{style:{fontSize:10,color:"#64748b"}},"Now:"),
-                  h("input",{type:"number",defaultValue:item.currentValue||item.amount,onBlur:e=>updCurr(item.id,e.target.value),style:{...S.inp,width:110,padding:"3px 7px",fontSize:11,color:ir>=0?"#10b981":"#ef4444",fontWeight:700}})
-                ),
-                h("div",{style:{fontSize:10,color:ir>=0?"#10b981":"#ef4444"}},(ir>=0?"+":"")+fmt(ir)+" "+(ip>=0?"+":"")+ip.toFixed(1)+"%")
+    // Add payment modal
+    showPayment&&h("div",{onClick:()=>setShowPayment(null),style:{position:"fixed",inset:0,background:"rgba(0,0,0,.85)",zIndex:500,display:"flex",alignItems:"center",justifyContent:"center",padding:16}},
+      h("div",{onClick:e=>e.stopPropagation(),style:{background:"#111126",borderRadius:16,padding:24,width:"100%",maxWidth:420,border:"1px solid #252540"}},
+        h("div",{style:{fontSize:13,fontWeight:800,color:"#fff",marginBottom:4}},"Record Payment Received"),
+        h("div",{style:{fontSize:11,color:"#64748b",marginBottom:16}},"Enter the amount you received this month from this investment"),
+        h("input",{type:"number",value:payAmt,onChange:e=>setPayAmt(e.target.value),placeholder:"Amount received this month (NGN)",style:{...S.inp,marginBottom:8},autoFocus:true}),
+        h("input",{value:payDate,onChange:e=>setPayDate(e.target.value),placeholder:"Date e.g. 25 Jun 2026",style:{...S.inp,marginBottom:8}}),
+        h("input",{value:payNote,onChange:e=>setPayNote(e.target.value),placeholder:"Note e.g. Monthly interest payment",style:{...S.inp,marginBottom:16}}),
+        h("div",{style:{display:"flex",gap:8}},
+          h("button",{onClick:()=>addPayment(showPayment),style:S.btn()},"Record Payment"),
+          h("button",{onClick:()=>setShowPayment(null),style:S.btn("#1a1a38","#94a3b8")},"Cancel")
+        )
+      )
+    ),
+    // Investment list
+    investments.length>0&&h("div",null,
+      h("div",{style:{fontSize:12,fontWeight:700,color:"#a5b4fc",marginBottom:10}},"Your Investments"),
+      ...investments.map(item=>{
+        const stats=getInvStats(item);
+        const ttype=typeMap[item.type]||{color:"#6366f1",label:item.type};
+        const pctBar=Math.min(100,stats.pctRecouped);
+        return h("div",{key:item.id,style:{...S.card(""),border:"1px solid "+ttype.color+"30",marginBottom:12}},
+          // Header row
+          h("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:12}},
+            h("div",null,
+              h("div",{style:{display:"flex",alignItems:"center",gap:8,marginBottom:4}},
+                h("div",{style:{width:10,height:10,borderRadius:2,background:ttype.color,flexShrink:0}}),
+                h("span",{style:{fontSize:13,fontWeight:700,color:"#e2e8f0"}},item.name),
+                h("span",{style:{fontSize:10,padding:"2px 8px",borderRadius:10,background:ttype.color+"18",color:ttype.color,fontWeight:600}},ttype.label)
               ),
-              h("button",{onClick:()=>delInv(item.id),style:{background:"transparent",border:"none",color:"#ef4444",cursor:"pointer",fontSize:12}},"Del")
-            );
-          })
+              h("div",{style:{display:"flex",gap:12,flexWrap:"wrap",fontSize:10,color:"#64748b"}},
+                item.startDate&&h("span",null,"Started: "+item.startDate),
+                item.maturityDate&&h("span",{style:{color:stats.isOverdue?"#ef4444":stats.daysLeft<=30?"#f59e0b":"#64748b"}},
+                  stats.isOverdue?"OVERDUE by "+Math.abs(stats.daysLeft)+" days":
+                  stats.daysLeft===0?"Matures TODAY":
+                  "Matures: "+item.maturityDate+" ("+stats.daysLeft+" days)"
+                ),
+                item.notes&&h("span",{style:{color:"#475569"}},item.notes)
+              )
+            ),
+            h("button",{onClick:()=>delInv(item.id),style:{background:"transparent",border:"none",color:"#ef4444",cursor:"pointer",fontSize:12,padding:"0 4px"}},"Delete")
+          ),
+          // Key numbers grid
+          h("div",{style:{display:"grid",gridTemplateColumns:"1fr 1fr 1fr 1fr",gap:8,marginBottom:12}},
+            [{label:"Principal",val:stats.p,color:"#6366f1"},{label:"Annual Rate",val:null,rate:stats.r,color:"#f59e0b"},{label:"Expected Total",val:stats.expectedTotal,color:"#a5b4fc"},{label:"Expected Interest",val:stats.expectedReturn,color:"#10b981"}]
+            .map(c=>h("div",{key:c.label,style:{background:"#0d0d20",borderRadius:8,padding:"8px 10px"}},
+              h("div",{style:{fontSize:9,color:"#64748b",marginBottom:2}},c.label),
+              h("div",{style:{fontSize:12,fontWeight:800,color:c.color}},c.val!==null?fmt(c.val):c.rate+"%")
+            ))
+          ),
+          // Progress: how much recouped
+          h("div",{style:{marginBottom:10}},
+            h("div",{style:{display:"flex",justifyContent:"space-between",marginBottom:5}},
+              h("span",{style:{fontSize:11,color:"#94a3b8",fontWeight:600}},"Repayment Progress"),
+              h("span",{style:{fontSize:11,fontWeight:700,color:stats.pctRecouped>=100?"#10b981":"#f59e0b"}},stats.pctRecouped.toFixed(1)+"% received")
+            ),
+            h("div",{style:{background:"#0a0a18",borderRadius:20,height:8,overflow:"hidden"}},
+              h("div",{style:{height:"100%",borderRadius:20,width:pctBar+"%",background:stats.pctRecouped>=100?"#10b981":"linear-gradient(90deg,#6366f1,#a5b4fc)",transition:"width .5s"}})
+            ),
+            h("div",{style:{display:"flex",justifyContent:"space-between",marginTop:5,fontSize:10}},
+              h("span",{style:{color:"#10b981"}},"Received: "+fmt(stats.received)),
+              h("span",{style:{color:stats.totalToRecoup>0?"#f59e0b":"#10b981",fontWeight:700}},
+                stats.totalToRecoup>0?"Still to receive: "+fmt(stats.totalToRecoup):"Fully repaid!")
+            )
+          ),
+          // Payments log
+          (item.payments&&item.payments.length>0)&&h("div",{style:{background:"#0d0d20",borderRadius:8,padding:10,marginBottom:10}},
+            h("div",{style:{fontSize:10,color:"#64748b",fontWeight:600,marginBottom:8,textTransform:"uppercase",letterSpacing:1}},"Payment History"),
+            ...item.payments.map(p=>h("div",{key:p.id,style:{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"5px 0",borderBottom:"1px solid #1a1a38",fontSize:11}},
+              h("span",{style:{color:"#94a3b8"}},p.date+(p.note?" - "+p.note:"")),
+              h("div",{style:{display:"flex",alignItems:"center",gap:8}},
+                h("span",{style:{color:"#10b981",fontWeight:700}},fmt(p.amount)),
+                h("button",{onClick:()=>delPayment(item.id,p.id),style:{background:"transparent",border:"none",color:"#ef4444",cursor:"pointer",fontSize:10}},"x")
+              )
+            ))
+          ),
+          // Record payment button
+          h("button",{onClick:()=>setShowPayment(item.id),style:{...S.btn("#10b98120","#10b981"),border:"1px solid #10b98140",width:"100%",padding:9,fontSize:12}},
+            "+ Record Payment Received This Month")
         );
       })
     ),
-    savingsGoals.length>0&&h("div",{style:S.card()},
-      h("div",{style:{fontSize:12,fontWeight:700,color:"#a5b4fc",marginBottom:12}},"Savings Goals"),
-      ...savingsGoals.map(g=>{const pct=g.target>0?Math.min(100,(g.saved/g.target)*100):0,rem=g.target-g.saved;
-        return h("div",{key:g.id,style:{background:"#0d0d20",borderRadius:10,padding:14,marginBottom:10,border:"1px solid #252540"}},
+    // Savings Goals
+    savingsGoals.length>0&&h("div",{style:{marginTop:14}},
+      h("div",{style:{fontSize:12,fontWeight:700,color:"#a5b4fc",marginBottom:10}},"Savings Goals"),
+      ...savingsGoals.map(g=>{
+        const pct=g.target>0?Math.min(100,(g.saved/g.target)*100):0,rem=g.target-g.saved;
+        return h("div",{key:g.id,style:{...S.card(""),marginBottom:10}},
           h("div",{style:{display:"flex",justifyContent:"space-between",marginBottom:8}},
             h("div",null,h("div",{style:{fontSize:12,fontWeight:700,color:"#e2e8f0"}},g.name),g.deadline&&h("div",{style:{fontSize:10,color:"#64748b",marginTop:2}},"Target: "+g.deadline)),
-            h("button",{onClick:()=>delGoal(g.id),style:{background:"transparent",border:"none",color:"#ef4444",cursor:"pointer",fontSize:12}},"Del")
+            h("button",{onClick:()=>delGoal(g.id),style:{background:"transparent",border:"none",color:"#ef4444",cursor:"pointer",fontSize:12}},"Delete")
           ),
           h("div",{style:{display:"flex",justifyContent:"space-between",fontSize:11,marginBottom:6}},
             h("span",{style:{color:"#10b981"}},"Saved: "+fmt(g.saved)),
             h("span",{style:{color:"#64748b"}},"Target: "+fmt(g.target)),
-            h("span",{style:{color:rem<=0?"#10b981":"#f59e0b",fontWeight:700}},rem<=0?"Reached!":fmt(rem)+" to go")
+            h("span",{style:{color:rem<=0?"#10b981":"#f59e0b",fontWeight:700}},rem<=0?"Goal reached!":fmt(rem)+" to go")
           ),
           h("div",{style:{background:"#1a1a38",borderRadius:20,height:8,overflow:"hidden",marginBottom:8}},h("div",{style:{height:"100%",borderRadius:20,width:pct+"%",background:pct>=100?"#10b981":"linear-gradient(90deg,#6366f1,#a5b4fc)"}})),
           h("div",{style:{display:"flex",alignItems:"center",gap:8}},
-            h("span",{style:{fontSize:10,color:"#64748b"}},"Update saved: NGN"),
+            h("span",{style:{fontSize:10,color:"#64748b"}},"Update: NGN"),
             h("input",{type:"number",defaultValue:g.saved,onBlur:e=>updGoalSaved(g.id,e.target.value),style:{...S.inp,width:130,padding:"4px 8px",fontSize:11}}),
             h("span",{style:{fontSize:10,color:"#6366f1",fontWeight:700}},pct.toFixed(0)+"%")
           )
         );
       })
     ),
-    investments.length===0&&savingsGoals.length===0&&h("div",{style:S.card()},h("div",{style:{textAlign:"center",color:"#475569",padding:30}},h("div",{style:{fontSize:13,color:"#64748b",marginBottom:4}},"No investments tracked yet"),h("div",{style:{fontSize:11,color:"#475569"}},"Click Add Investment to start")))
+    investments.length===0&&savingsGoals.length===0&&h("div",{style:S.card()},
+      h("div",{style:{textAlign:"center",color:"#475569",padding:30}},
+        h("div",{style:{fontSize:13,color:"#64748b",marginBottom:4}},"No investments tracked yet"),
+        h("div",{style:{fontSize:11,color:"#475569"}},"Click Add Investment to get started")
+      )
+    )
   );
 }
 
@@ -757,8 +905,16 @@ function App(){
   const[state,setState]=useState(()=>loadState());
   const[unlocked,setUnlocked]=useState(()=>sessionStorage.getItem("ftrack_ok")==="1");
   const[tab,setTab]=useState("dashboard");
-  const[month,setMonth]=useState("May-Jun 2026");
+  const[month,setMonth]=useState(()=>{const saved=sessionStorage.getItem("ftrack_month");return saved||"May-Jun 2026";});
   const[drill,setDrill]=useState(null);
+  // Always default to latest month when months are available
+  useEffect(()=>{
+    if(months.length>0){
+      const latest=months[months.length-1];
+      setMonth(latest);
+      sessionStorage.setItem("ftrack_month",latest);
+    }
+  },[months.length]);
   const[showMan,setShowMan]=useState(false);
   const[showCats,setShowCats]=useState(false);
   const[showBudget,setShowBudget]=useState(false);
@@ -954,12 +1110,18 @@ function App(){
                   ),
                   h("div",{style:{display:"flex",gap:10,alignItems:"center"}},h("span",{style:{fontSize:10,color:"#64748b"}},pct.toFixed(1)+"%"),h("span",{style:{fontSize:12,fontWeight:700,color:cat.color}},fmt(amt)))
                 ),
-                h("div",{style:{background:"#0a0a18",borderRadius:20,height:5}},h("div",{style:{height:"100%",borderRadius:20,width:pct+"%",background:(budgets[cat.id]>0&&amt>budgets[cat.id])?"#ef4444":cat.color}})),
-                (budgets[cat.id]>0)&&h("div",{style:{display:"flex",alignItems:"center",gap:6,marginTop:3}},
-                  h("div",{style:{background:"#0a0a18",borderRadius:20,height:3,flex:1,overflow:"hidden"}},
-                    h("div",{style:{height:"100%",borderRadius:20,width:Math.min(100,(amt/(budgets[cat.id]||1))*100)+"%",background:amt>budgets[cat.id]?"#ef4444":"#10b981"}})),
-                  h("span",{style:{fontSize:9,color:"#64748b",whiteSpace:"nowrap"}},amt>budgets[cat.id]?"Over budget!":"Budget: "+fmt(budgets[cat.id]))
-                )
+                h("div",{style:{background:"#0a0a18",borderRadius:20,height:5}},h("div",{style:{height:"100%",borderRadius:20,width:pct+"%",background:cat.color}})),
+                (budgets[cat.id]>0)&&(()=>{
+                  const budget=budgets[cat.id];
+                  const diff=amt-budget;
+                  const diffPct=Math.abs((diff/budget)*100).toFixed(0);
+                  const under=budget-amt;
+                  return h("div",{style:{marginTop:4,fontSize:10,fontWeight:600,color:diff>0?"#ef4444":"#10b981"}},
+                    diff>0
+                      ? diffPct+"% over budget ("+fmt(diff)+" over "+fmt(budget)+")"
+                      : diffPct+"% under budget ("+fmt(under)+" remaining of "+fmt(budget)+")"
+                  );
+                })()
               );
             })
           )
