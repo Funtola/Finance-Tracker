@@ -38,6 +38,20 @@ const CATS=[
   {id:"electronics",label:"Electronics and Gadgets",color:"#8b5cf6",type:"expense"},
   {id:"giving",label:"Giving",color:"#10b981",type:"expense"},
   {id:"other",label:"Other",color:"#9ca3af",type:"expense"},
+
+const INV_TYPES=[
+  {id:"tbills",label:"Treasury Bills",color:"#6366f1"},
+  {id:"fixed_deposit",label:"Fixed Deposit",color:"#14b8a6"},
+  {id:"stocks",label:"Stocks and Equities",color:"#10b981"},
+  {id:"mutual_fund",label:"Mutual Funds",color:"#f59e0b"},
+  {id:"real_estate",label:"Real Estate",color:"#ec4899"},
+  {id:"loan_given",label:"Loan Given Out",color:"#f97316"},
+  {id:"crypto",label:"Crypto",color:"#8b5cf6"},
+  {id:"pension",label:"Pension",color:"#84cc16"},
+  {id:"other_inv",label:"Other Investment",color:"#94a3b8"},
+];
+
+const FUTURE_MONTHS=["Jun-Jul 2026","Jul-Aug 2026","Aug-Sep 2026","Sep-Oct 2026","Oct-Nov 2026","Nov-Dec 2026","Dec-Jan 2027","Jan-Feb 2027","Feb-Mar 2027","Mar-Apr 2027"];
 ];
 
 const KEY="ftrack_v5";
@@ -265,7 +279,7 @@ function UploadTab({apiKey,cats,onConfirm}){
         body:JSON.stringify({model:"claude-sonnet-4-6",max_tokens:4000,messages:[{role:"user",content}]})});
       const j=await res.json();if(j.error)throw new Error(j.error.message);
       const text=(j.content||[]).map(i=>i.text||"").join("");
-      const cleaned=text.split("```json").join("").split("```").join("").trim();const parsed=JSON.parse(cleaned);
+      var bq=String.fromCharCode(96);var cleaned=text.split(bq+bq+bq+"json").join("").split(bq+bq+bq).join("").trim();const parsed=JSON.parse(cleaned);
       setPreview({month:parsed.month,txns:parsed.transactions.map(t=>({...t,id:uid(),month:parsed.month,amount:Number(t.amount)||0}))});
       setStatus("done");
     }catch(ex){setStatus("error");setErr(ex.message);}
