@@ -37,6 +37,7 @@ const CATS=[
   {id:"savings",label:"Savings / Investment",color:"#0ea5e9",type:"expense"},
   {id:"electronics",label:"Electronics and Gadgets",color:"#8b5cf6",type:"expense"},
   {id:"giving",label:"Giving",color:"#10b981",type:"expense"},
+  {id:"education",label:"Education",color:"#3b82f6",type:"expense"},
   {id:"other",label:"Other",color:"#9ca3af",type:"expense"},
 ];
 
@@ -267,22 +268,54 @@ function UploadTab({apiKey,cats,onConfirm}){
   async function handleFile(e){
     const file=e.target.files[0];if(!file)return;
     if(!apiKey){setStatus("error");setErr("Save your API key in the AI Advisor panel first.");return;}
-    setStatus("loading");setPreview(null);
+    const isPdf=file.type==="application/pdf",isImg=file.type.startsWith("image/");
+    if(!isPdf&&!isImg){setStatus("error");setErr("Upload a PDF or image.");return;}
+    setStatus("loading");setPreview(null);setErr("");
     try{
       const b64=await new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result.split(",")[1]);r.onerror=rej;r.readAsDataURL(file);});
       const catList=cats.map(c=>c.id+"="+c.label).join(", ");
-      const prompt="Analyze this Nigerian bank statement. Extract EVERY transaction. Return ONLY valid JSON: {month: Jun-Jul 2026, transactions:[{desc, amount, date, cat, source}]} Categories: "+catList;
-      const isPdf=file.type==="application/pdf";
-      const content=[isPdf?{type:"document",source:{type:"base64",media_type:"application/pdf",data:b64}}:{type:"image",source:{type:"base64",media_type:file.type,data:b64}},{type:"text",text:prompt}];
-      const res=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",
+      const sysPrompt="You are a Nigerian bank statement parser. Extract ALL transactions and return ONLY valid JSON. No markdown. Format: {month: Jun-Jul 2026, transactions:[{desc, amount, date, cat, source}]}. Categories: "+catList+". Rules: income=credits received. transportation=uber/tfare. food_dining=food/restaurants. clothing_beauty=clothes/hair/nails. church=offerings. utilities=electricity/NEPA. data_airtime=MTN data/airtime. health=hospital. loans_transfers=transfers to people. car_auto=fuel/car parts. bank_charges=fees. giving=donations. education=school fees/courses/training. SKIP all OWealth Withdrawal, Auto-save to OWealth, Stamp Duty, VAT lines.";
+      const content2=[
+        isPdf?{type:"document",source:{type:"base64",media_type:"application/pdf",data:b64}}:{type:"image",source:{type:"base64",media_type:file.type,data:b64}},
+        {type:"text",text:"Parse this bank statement and return ALL transactions as JSON. Month is Jun-Jul 2026 for dates June 25 to July 25 2026. Return raw JSON only."}
+      ];
+      const res=await fetch("https://api.anthropic.com/v1/messages",{
+        method:"POST",
         headers:{"Content-Type":"application/json","x-api-key":apiKey,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},
-        body:JSON.stringify({model:"claude-sonnet-4-6",max_tokens:4000,messages:[{role:"user",content}]})});
-      const j=await res.json();if(j.error)throw new Error(j.error.message);
-      const text=(j.content||[]).map(i=>i.text||"").join("");
-      var bq=String.fromCharCode(96);var cleaned=text.split(bq+bq+bq+"json").join("").split(bq+bq+bq).join("").trim();const parsed=JSON.parse(cleaned);
-      setPreview({month:parsed.month,txns:parsed.transactions.map(t=>({...t,id:uid(),month:parsed.month,amount:Number(t.amount)||0}))});
+        body:JSON.stringify({model:"claude-sonnet-4-6",max_tokens:16000,system:sysPrompt,messages:[{role:"user",content:content2}]})
+      });
+      const j=await res.json();
+      if(j.error)throw new Error(j.error.message);
+      const text=(j.content||[]).map(i=>i.text||"").join("")||"";
+      var bq=String.fromCharCode(96);
+      var cleaned=text.split(bq+bq+bq+"json").join("").split(bq+bq+bq).join("").trim();
+      // Repair truncated JSON
+      let jsonStr=cleaned;
+      try{
+        JSON.parse(jsonStr);
+      }catch(e){
+        // Strategy 1: find last complete },  and close array+object
+        const lastComma=jsonStr.lastIndexOf("},");
+        if(lastComma>0) jsonStr=jsonStr.substring(0,lastComma+1)+"]}";
+        // Strategy 2: if still broken, find last complete } before array ends
+        try{JSON.parse(jsonStr);}catch(e2){
+          const lastClose=jsonStr.lastIndexOf("}");
+          if(lastClose>0) jsonStr=jsonStr.substring(0,lastClose+1)+"]}";
+        }
+      }
+      const parsed=JSON.parse(jsonStr);
+      const txnList=(parsed.transactions||[]).map(t=>({...t,id:uid(),month:parsed.month||"Jun-Jul 2026",amount:Number(t.amount)||0}));
+      setPreview({month:parsed.month||"Jun-Jul 2026",txns:txnList});
       setStatus("done");
-    }catch(ex){setStatus("error");setErr(ex.message);}
+    }catch(ex){
+      // If JSON parse failed, show helpful message
+      if(ex.message.includes("JSON")){
+        setStatus("error");
+        setErr("Statement too large. Please upload one page at a time, or take a screenshot of a portion of the statement.");
+      } else {
+        setStatus("error");setErr(ex.message);
+      }
+    }
     e.target.value="";
   }
   const income=preview?preview.txns.filter(t=>t.cat==="income").reduce((s,t)=>s+t.amount,0):0;
