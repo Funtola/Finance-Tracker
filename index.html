@@ -38,6 +38,7 @@ const CATS=[
   {id:"electronics",label:"Electronics and Gadgets",color:"#8b5cf6",type:"expense"},
   {id:"giving",label:"Giving",color:"#10b981",type:"expense"},
   {id:"other",label:"Other",color:"#9ca3af",type:"expense"},
+];
 
 const INV_TYPES=[
   {id:"tbills",label:"Treasury Bills",color:"#6366f1"},
@@ -52,7 +53,6 @@ const INV_TYPES=[
 ];
 
 const FUTURE_MONTHS=["Jun-Jul 2026","Jul-Aug 2026","Aug-Sep 2026","Sep-Oct 2026","Oct-Nov 2026","Nov-Dec 2026","Dec-Jan 2027","Jan-Feb 2027","Feb-Mar 2027","Mar-Apr 2027"];
-];
 
 const KEY="ftrack_v5";
 
@@ -613,7 +613,7 @@ function App(){
   const[showCats,setShowCats]=useState(false);
   const[showBudget,setShowBudget]=useState(false);
 
-  const{transactions:txns,categories:cats,budgets,apiKey,investments,savingsGoals,openingBalances,uploadHistory}=state;
+  const{transactions:txns,categories:cats,invTypes,budgets,apiKey,investments,savingsGoals,openingBalances,uploadHistory}=state;
   const allCats=cats||CATS;
   const allInvTypes=invTypes||INV_TYPES;
   const months=sortMonths([...new Set(txns.map(t=>t.month))]);
