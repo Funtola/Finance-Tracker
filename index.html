@@ -274,7 +274,7 @@ function UploadTab({apiKey,cats,onConfirm}){
     try{
       const b64=await new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result.split(",")[1]);r.onerror=rej;r.readAsDataURL(file);});
       const catList=cats.map(c=>c.id+"="+c.label).join(", ");
-      const sysPrompt="You are a Nigerian bank statement parser. Extract ALL transactions and return ONLY valid JSON. No markdown. Format: {month: Jun-Jul 2026, transactions:[{desc, amount, date, cat, source}]}. Categories: "+catList+". Rules: income=credits received. transportation=uber/tfare. food_dining=food/restaurants. clothing_beauty=clothes/hair/nails. church=offerings. utilities=electricity/NEPA. data_airtime=MTN data/airtime. health=hospital. loans_transfers=transfers to people. car_auto=fuel/car parts. bank_charges=fees. giving=donations. education=school fees/courses/training. SKIP all OWealth Withdrawal, Auto-save to OWealth, Stamp Duty, VAT lines.";
+      const sysPrompt="Parse this OPay bank statement. Return ONLY compact JSON, no spaces or newlines in JSON. Use month Jun-Jul 2026 for ALL transactions regardless of date shown. Format:{month:Jun-Jul 2026,transactions:[{desc:short name,amount:number,date:DD Mon,cat:category_id,source:OPay}]}. Category IDs: "+catList+". Rules: income=only money received FROM OTHER PEOPLE. transportation=uber/bolt/tfare. food_dining=food/restaurants/eat out/juice/supermarket. clothing_beauty=clothes/hair/nails/beauty. church=offerings/tithes/church. utilities=electricity/NEPA/water. data_airtime=MTN/Airtel data/airtime. health=hospital/pharmacy/medical. loans_transfers=money sent to people as loans. car_auto=fuel/car parts/driving license/vehicle. bank_charges=card fee/delivery fee/bank charges. giving=donations/charity. education=school fees/courses/training/masterclass. gifts_shopping=birthday gifts/shopping for others. SKIP these completely do not include: OWealth Withdrawal, Auto-save to OWealth, Stamp Duty, VAT on Transfer Fee. IMPORTANT: Transfer from own GTBank account to OPay is NOT income - SKIP it.";
       const content2=[
         isPdf?{type:"document",source:{type:"base64",media_type:"application/pdf",data:b64}}:{type:"image",source:{type:"base64",media_type:file.type,data:b64}},
         {type:"text",text:"Parse this bank statement and return ALL transactions as JSON. Month is Jun-Jul 2026 for dates June 25 to July 25 2026. Return raw JSON only."}
@@ -282,7 +282,7 @@ function UploadTab({apiKey,cats,onConfirm}){
       const res=await fetch("https://api.anthropic.com/v1/messages",{
         method:"POST",
         headers:{"Content-Type":"application/json","x-api-key":apiKey,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},
-        body:JSON.stringify({model:"claude-sonnet-4-6",max_tokens:16000,system:sysPrompt,messages:[{role:"user",content:content2}]})
+        body:JSON.stringify({model:"claude-sonnet-4-6",max_tokens:8192,system:sysPrompt,messages:[{role:"user",content:content2}]})
       });
       const j=await res.json();
       if(j.error)throw new Error(j.error.message);
@@ -304,7 +304,12 @@ function UploadTab({apiKey,cats,onConfirm}){
         }
       }
       const parsed=JSON.parse(jsonStr);
-      const txnList=(parsed.transactions||[]).map(t=>({...t,id:uid(),month:parsed.month||"Jun-Jul 2026",amount:Number(t.amount)||0}));
+      var parsedMonth=parsed.month||"Jun-Jul 2026";
+      // Normalize month - if AI returned wrong format, fix it
+      if(parsedMonth.includes("Jul")&&!parsedMonth.includes("Jun"))parsedMonth="Jun-Jul 2026";
+      if(parsedMonth.includes("June")&&parsedMonth.includes("July"))parsedMonth="Jun-Jul 2026";
+      if(parsedMonth==="Jul 2026"||parsedMonth==="July 2026")parsedMonth="Jun-Jul 2026";
+      const txnList=(parsed.transactions||[]).map(t=>({...t,id:uid(),month:parsedMonth,amount:Number(t.amount)||0}));
       setPreview({month:parsed.month||"Jun-Jul 2026",txns:txnList});
       setStatus("done");
     }catch(ex){
