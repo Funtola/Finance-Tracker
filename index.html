@@ -307,7 +307,7 @@ function UploadTab({apiKey,cats,onConfirm}){
     try{
       const b64=await new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result.split(",")[1]);r.onerror=rej;r.readAsDataURL(file);});
       const catList=cats.map(c=>c.id+"="+c.label).join(", ");
-      const sysPrompt="Parse this OPay bank statement. Return ONLY compact JSON, no spaces or newlines in JSON. Use month Jun-Jul 2026 for ALL transactions regardless of date shown. Format:{month:Jun-Jul 2026,transactions:[{desc:short name,amount:number,date:DD Mon,cat:category_id,source:OPay}]}. Category IDs: "+catList+". Rules: income=only money received FROM OTHER PEOPLE. transportation=uber/bolt/tfare. food_dining=food/restaurants/eat out/juice/supermarket. clothing_beauty=clothes/hair/nails/beauty. church=offerings/tithes/church. utilities=electricity/NEPA/water. data_airtime=MTN/Airtel data/airtime. health=hospital/pharmacy/medical. loans_transfers=money sent to people as loans. car_auto=fuel/car parts/driving license/vehicle. bank_charges=card fee/delivery fee/bank charges. giving=donations/charity. education=school fees/courses/training/masterclass. gifts_shopping=birthday gifts/shopping for others. SKIP these completely do not include: OWealth Withdrawal, Auto-save to OWealth, Stamp Duty, VAT on Transfer Fee. IMPORTANT: Transfer from own GTBank account to OPay is NOT income - SKIP it.";
+      const sysPrompt="Parse this OPay statement for OLUWAFUNTO MOTUNRAYO FALUA. Return ONLY JSON. Month is Jun-Jul 2026 for all entries. Format:{month:Jun-Jul 2026,transactions:[{desc:name,amount:number,date:DD Mon,cat:category_id,source:OPay}]}. Categories: "+catList+". CRITICAL: Transfer from FALUA OLUWAFUNTO M or GTBank = category income, this is her salary/budget money, NOT an expense. Any credit received from other named people = income. Expenses: transportation=uber/bolt/tfare. food_dining=food/restaurants/supermarket/eat out. clothing_beauty=clothes/shoes/hair/nails. church=offerings/tithes. utilities=electricity/NEPA. data_airtime=MTN data/airtime. health=hospital/pharmacy. loans_transfers=money sent to others as loans. car_auto=fuel/car parts/license. bank_charges=card fee/bank fee. giving=large donations/large church offerings. education=courses/school fees/masterclass. gifts_shopping=gifts/shopping for others. savings=transfers back to own GTBank. SKIP: OWealth Withdrawal, Auto-save to OWealth, Stamp Duty, VAT.";
       const content2=[
         isPdf?{type:"document",source:{type:"base64",media_type:"application/pdf",data:b64}}:{type:"image",source:{type:"base64",media_type:file.type,data:b64}},
         {type:"text",text:"Parse this bank statement and return ALL transactions as JSON. Month is Jun-Jul 2026 for dates June 25 to July 25 2026. Return raw JSON only."}
@@ -369,13 +369,39 @@ function UploadTab({apiKey,cats,onConfirm}){
     ),
     status==="loading"&&h("div",{style:{textAlign:"center",padding:20,color:"#a5b4fc"}},"Reading statement... 20 to 40 seconds"),
     status==="error"&&h("div",{style:{background:"#1a0808",border:"1px solid #ef4444",borderRadius:10,padding:12,color:"#fca5a5",fontSize:12,marginBottom:12}},err),
-    status==="done"&&preview&&h("div",{style:{...S.card(),border:"1px solid #10b981"}},
+    status==="done"&&preview&&h("div",{style:Object.assign({},S.card(),{border:"1px solid #10b981"})},
       h("div",{style:{fontSize:13,fontWeight:700,color:"#34d399",marginBottom:12}},preview.month+" - "+preview.txns.length+" transactions found"),
       h("div",{style:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:12}},
         h("div",{style:{background:"#0d0d20",borderRadius:10,padding:11}},h("div",{style:{fontSize:10,color:"#64748b"}},"INCOME"),h("div",{style:{fontSize:15,fontWeight:800,color:"#10b981"}},fmt(income))),
         h("div",{style:{background:"#0d0d20",borderRadius:10,padding:11}},h("div",{style:{fontSize:10,color:"#64748b"}},"EXPENSES"),h("div",{style:{fontSize:15,fontWeight:800,color:"#ef4444"}},fmt(expenses)))
       ),
-      h("button",{onClick:()=>onConfirm(preview.txns),style:{...S.btn(),width:"100%",padding:11,fontSize:13}},"Add "+preview.txns.length+" Transactions")
+      h("div",{style:{maxHeight:400,overflowY:"auto",marginBottom:12,border:"1px solid #252540",borderRadius:10}},
+        h("div",{style:{display:"grid",gridTemplateColumns:"auto 1fr auto auto",gap:0,fontSize:11}},
+          h("div",{style:{padding:"6px 8px",background:"#0d0d20",fontWeight:700,color:"#94a3b8",fontSize:10}},"DATE"),
+          h("div",{style:{padding:"6px 8px",background:"#0d0d20",fontWeight:700,color:"#94a3b8",fontSize:10}},"DESCRIPTION"),
+          h("div",{style:{padding:"6px 8px",background:"#0d0d20",fontWeight:700,color:"#94a3b8",fontSize:10}},"CATEGORY"),
+          h("div",{style:{padding:"6px 8px",background:"#0d0d20",fontWeight:700,color:"#94a3b8",fontSize:10,textAlign:"right"}},"AMOUNT"),
+          ...preview.txns.map(function(t,i){
+            var cat=cats.find(function(c){return c.id===t.cat;})||{label:t.cat,color:"#94a3b8"};
+            var bg=i%2===0?"#111126":"#0d0d20";
+            return [
+              h("div",{key:t.id+"d",style:{padding:"7px 8px",background:bg,color:"#64748b",fontSize:10,whiteSpace:"nowrap"}},t.date),
+              h("div",{key:t.id+"n",style:{padding:"7px 8px",background:bg,color:"#e2e8f0",fontSize:11}},t.desc),
+              h("select",{key:t.id+"c",onChange:function(e){
+                var newCat=e.target.value;
+                setPreview(function(p){return Object.assign({},p,{txns:p.txns.map(function(tx){return tx.id===t.id?Object.assign({},tx,{cat:newCat}):tx;})});});
+              },value:t.cat,style:{background:bg,border:"none",color:cat.color,fontSize:10,padding:"4px",cursor:"pointer",width:"100%"}},
+                cats.map(function(c){return h("option",{key:c.id,value:c.id},c.label);})
+              ),
+              h("div",{key:t.id+"a",style:{padding:"7px 8px",background:bg,color:t.cat==="income"?"#10b981":"#e2e8f0",fontWeight:700,fontSize:11,textAlign:"right",whiteSpace:"nowrap"}},fmt(t.amount))
+            ];
+          })
+        )
+      ),
+      h("div",{style:{display:"flex",gap:8}},
+        h("button",{onClick:function(){onConfirm(preview.txns);},style:Object.assign({},S.btn(),{flex:1,padding:11,fontSize:13})},"Add "+preview.txns.length+" Transactions"),
+        h("button",{onClick:function(){setPreview(null);setStatus(null);},style:Object.assign({},S.btn("#1a1a38","#94a3b8"),{padding:11})},"Cancel")
+      )
     )
   );
 }
