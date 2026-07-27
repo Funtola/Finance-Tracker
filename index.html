@@ -233,28 +233,44 @@ function PasswordLock({onUnlock}){
 
 function ReclassifyModal({txn,cats,onSave,onClose}){
   const[nc,setNc]=useState(txn.cat);
-  const catMap=Object.fromEntries(cats.map(c=>[c.id,c]));
+  const[newAmt,setNewAmt]=useState(String(txn.amount));
+  const[newDesc,setNewDesc]=useState(txn.desc||"");
+  const[newDate,setNewDate]=useState(txn.date||"");
+  const catMap=Object.fromEntries(cats.map(function(c){return[c.id,c];}));
   return h("div",{onClick:onClose,style:{position:"fixed",inset:0,background:"rgba(0,0,0,.85)",zIndex:500,display:"flex",alignItems:"center",justifyContent:"center",padding:16}},
-    h("div",{onClick:e=>e.stopPropagation(),style:{background:"#111126",borderRadius:16,padding:24,width:"100%",maxWidth:440,border:"1px solid #252540",maxHeight:"90vh",overflowY:"auto"}},
-      h("div",{style:{fontSize:14,fontWeight:800,color:"#fff",marginBottom:12}},"Reclassify Transaction"),
+    h("div",{onClick:function(e){e.stopPropagation();},style:{background:"#111126",borderRadius:16,padding:24,width:"100%",maxWidth:460,border:"1px solid #252540",maxHeight:"90vh",overflowY:"auto"}},
+      h("div",{style:{fontSize:14,fontWeight:800,color:"#fff",marginBottom:3}},"Edit Transaction"),
+      h("div",{style:{fontSize:11,color:"#64748b",marginBottom:14}},"Change category, amount, description or date"),
       h("div",{style:{background:"#0d0d20",borderRadius:10,padding:12,marginBottom:14,border:"1px solid #252540"}},
-        h("div",{style:{fontSize:12,color:"#e2e8f0",fontWeight:500}},txn.desc),
-        h("div",{style:{display:"flex",justifyContent:"space-between",marginTop:6}},
-          h("span",{style:{fontSize:10,color:"#64748b"}},txn.date+" - "+txn.source),
-          h("span",{style:{fontSize:12,fontWeight:800,color:"#10b981"}},fmt(txn.amount))
+        h("div",{style:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:10}},
+          h("div",null,
+            h("div",{style:{fontSize:10,color:"#64748b",marginBottom:4}},"AMOUNT (NGN)"),
+            h("input",{type:"number",value:newAmt,onChange:function(e){setNewAmt(e.target.value);},style:Object.assign({},S.inp,{fontSize:14,fontWeight:700,color:"#10b981"})})
+          ),
+          h("div",null,
+            h("div",{style:{fontSize:10,color:"#64748b",marginBottom:4}},"DATE"),
+            h("input",{value:newDate,onChange:function(e){setNewDate(e.target.value);},placeholder:"e.g. 15 Jul",style:S.inp})
+          )
+        ),
+        h("div",{style:{marginBottom:0}},
+          h("div",{style:{fontSize:10,color:"#64748b",marginBottom:4}},"DESCRIPTION"),
+          h("input",{value:newDesc,onChange:function(e){setNewDesc(e.target.value);},style:S.inp})
         )
       ),
-      h("div",{style:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6,marginBottom:16,maxHeight:280,overflowY:"auto"}},
-        ...cats.map(c=>h("div",{key:c.id,onClick:()=>setNc(c.id),style:{padding:"8px 10px",borderRadius:8,cursor:"pointer",border:"1.5px solid "+(nc===c.id?c.color:"#252540"),background:nc===c.id?c.color+"18":"#0d0d20"}},
-          h("div",{style:{fontSize:11,color:nc===c.id?c.color:"#94a3b8",fontWeight:600}},c.label)))
+      h("div",{style:{fontSize:11,fontWeight:600,color:"#94a3b8",marginBottom:8}},"Change Category"),
+      h("div",{style:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6,marginBottom:16,maxHeight:260,overflowY:"auto"}},
+        cats.map(function(c){return h("div",{key:c.id,onClick:function(){setNc(c.id);},style:{padding:"8px 10px",borderRadius:8,cursor:"pointer",border:"1.5px solid "+(nc===c.id?c.color:"#252540"),background:nc===c.id?c.color+"18":"#0d0d20"}},
+          h("div",{style:{fontSize:11,color:nc===c.id?c.color:"#94a3b8",fontWeight:600}},c.label)
+        );})
       ),
       h("div",{style:{display:"flex",gap:8}},
-        h("button",{onClick:()=>onSave(txn.id,nc),disabled:nc===txn.cat,style:S.btn()},"Save"),
+        h("button",{onClick:function(){onSave(txn.id,nc,parseFloat(newAmt)||txn.amount,newDesc||txn.desc,newDate||txn.date);},style:S.btn()},"Save Changes"),
         h("button",{onClick:onClose,style:S.btn("#1a1a38","#94a3b8")},"Cancel")
       )
     )
   );
 }
+
 
 function DrilldownPanel({catId,month,txns,cats,onReclassify,onDelete,onClose}){
   const catMap=Object.fromEntries(cats.map(c=>[c.id,c]));
@@ -266,7 +282,7 @@ function DrilldownPanel({catId,month,txns,cats,onReclassify,onDelete,onClose}){
   const filtered=rows.filter(t=>t.desc.toLowerCase().includes(search.toLowerCase())||String(t.amount).includes(search));
   return h("div",{onClick:onClose,style:{position:"fixed",inset:0,background:"rgba(0,0,0,.8)",zIndex:300,display:"flex",alignItems:"flex-end",justifyContent:"center"}},
     h("div",{onClick:e=>e.stopPropagation(),style:{background:"#111126",borderRadius:"16px 16px 0 0",padding:22,width:"100%",maxWidth:840,maxHeight:"80vh",overflowY:"auto",border:"1px solid "+cat.color+"35"}},
-      reclTxn&&h(ReclassifyModal,{txn:reclTxn,cats,onClose:()=>setReclTxn(null),onSave:(id,nc)=>{onReclassify(id,nc);setReclTxn(null);onClose();}}),
+      reclTxn&&h(ReclassifyModal,{txn:reclTxn,cats,onClose:()=>setReclTxn(null),onSave:function(id,nc,amt,desc,date){onReclassify(id,nc,amt,desc,date);setReclTxn(null);onClose();}}),
       h("div",{style:{display:"flex",justifyContent:"space-between",marginBottom:12}},
         h("div",null,
           h("div",{style:{fontSize:16,fontWeight:800,color:"#fff"}},cat.label),
@@ -805,7 +821,7 @@ function App(){
   const prevData=prevIdx>=0?calcMonth(txns,months[prevIdx]):null;
 
   function persist(u){var n=Object.assign({},state,u);setState(n);saveState(n);}
-  function reclassify(id,nc){persist({transactions:txns.map(function(t){return t.id===id?Object.assign({},t,{cat:nc}):t;})});}
+  function reclassify(id,nc,amt,desc,date){persist({transactions:txns.map(function(t){return t.id===id?Object.assign({},t,{cat:nc,amount:amt||t.amount,desc:desc||t.desc,date:date||t.date}):t;})});}
   function deleteTxn(id){persist({transactions:txns.filter(function(t){return t.id!==id;})});}
   function saveApiKey(k){persist({apiKey:k.trim()});}
   function updateCats(newCats){
