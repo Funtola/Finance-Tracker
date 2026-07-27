@@ -6,6 +6,7 @@
 <title>Funtola Finance Tracker</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
 body{font-family:"Segoe UI",sans-serif;background:#080814;color:#e2e8f0;min-height:100vh;}
@@ -310,10 +311,20 @@ function UploadTab({apiKey,cats,onConfirm}){
     if(isExcel||isCsv){
       setStatus("loading");setPreview(null);setErr("");
       try{
-        var rawText=await new Promise(function(res,rej){var r=new FileReader();r.onload=function(ev){res(ev.target.result);};r.onerror=rej;r.readAsText(file);});
+        var rawText;
+        if(isExcel){
+          // .xlsx/.xls are binary zip files - must be parsed with SheetJS, not read as text
+          var buf=await new Promise(function(res,rej){var r=new FileReader();r.onload=function(ev){res(ev.target.result);};r.onerror=rej;r.readAsArrayBuffer(file);});
+          var wb=XLSX.read(buf,{type:"array"});
+          var firstSheetName=wb.SheetNames[0];
+          var sheet=wb.Sheets[firstSheetName];
+          rawText=XLSX.utils.sheet_to_csv(sheet);
+        }else{
+          rawText=await new Promise(function(res,rej){var r=new FileReader();r.onload=function(ev){res(ev.target.result);};r.onerror=rej;r.readAsText(file);});
+        }
         var catList=cats.map(function(c){return c.id+"="+c.label;}).join(", ");
         var sysMsg="You are a JSON API. You ONLY output raw JSON. Never write sentences. Never explain. Output nothing except the JSON object.";
-        var userMsg="Parse this Nigerian bank statement CSV and return a JSON object. Output ONLY the JSON, nothing else, no explanation.\n\nFormat: {\"month\":\"Jun-Jul 2026\",\"transactions\":[{\"desc\":\"short description\",\"amount\":5000,\"date\":\"27 Jun\",\"cat\":\"food_dining\",\"source\":\"OPay\"}]}\n\nCategory IDs: "+catList+"\n\nRules:\n- Debit/withdrawal = expense\n- Credit/deposit from others = income\n- income: salary, received transfers\n- transportation: uber, tfare, bolt\n- food_dining: food, restaurants, groceries, supermarket\n- clothing_beauty: clothes, hair, nails\n- giving: donations, charity, gifts to family\n- utilities: electricity, NEPA, gas\n- data_airtime: MTN, Airtel, data, airtime\n- health: hospital, clinic, pharmacy\n- car_auto: fuel, car parts, driving school\n- bank_charges: SMS fee, ATM fee, card fee\n- education: school fees, courses\n- savings: fixed deposit, investment\n- loans_transfers: money sent as loans\n\nData:\n"+rawText.slice(0,6000);
+        var userMsg="Parse this Nigerian bank statement CSV and return a JSON object. Output ONLY the JSON, nothing else, no explanation.\n\nFormat: {\"month\":\"Jun-Jul 2026\",\"transactions\":[{\"desc\":\"short description\",\"amount\":5000,\"date\":\"27 Jun\",\"cat\":\"food_dining\",\"source\":\"OPay\"}]}\n\nCategory IDs: "+catList+"\n\nRules:\n- Debit/withdrawal = expense\n- Credit/deposit from others = income\n- income: salary, received transfers\n- transportation: uber, tfare, bolt\n- food_dining: food, restaurants, groceries, supermarket\n- clothing_beauty: clothes, hair, nails\n- giving: donations, charity, gifts to family\n- utilities: electricity, NEPA, gas\n- data_airtime: MTN, Airtel, data, airtime\n- health: hospital, clinic, pharmacy\n- car_auto: fuel, car parts, driving school\n- bank_charges: SMS fee, ATM fee, card fee\n- education: school fees, courses\n- savings: fixed deposit, investment\n- loans_transfers: money sent as loans\n\nData:\n"+rawText.slice(0,12000);
         var res=await fetch("https://api.anthropic.com/v1/messages",{
           method:"POST",
           headers:{"Content-Type":"application/json","x-api-key":apiKey,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},
@@ -329,6 +340,7 @@ function UploadTab({apiKey,cats,onConfirm}){
         var start=raw.indexOf("{");
         var end=raw.lastIndexOf("}");
         if(start>=0&&end>start)raw=raw.slice(start,end+1);
+        else throw new Error("Model did not return JSON. It replied: \""+raw.slice(0,180)+"\"");
         // Repair if truncated
         try{JSON.parse(raw);}catch(e){
           var lc=raw.lastIndexOf("},");
