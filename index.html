@@ -365,7 +365,7 @@ function UploadTab({apiKey,cats,onConfirm}){
     try{
       const b64=await new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result.split(",")[1]);r.onerror=rej;r.readAsDataURL(file);});
       const catList=cats.map(c=>c.id+"="+c.label).join(", ");
-      const sysPrompt="Parse this OPay statement for OLUWAFUNTO MOTUNRAYO FALUA. Return ONLY JSON. Month is Jun-Jul 2026 for all entries. Format:{month:Jun-Jul 2026,transactions:[{desc:name,amount:number,date:DD Mon,cat:category_id,source:OPay}]}. Categories: "+catList+". CRITICAL: Transfer from FALUA OLUWAFUNTO M or GTBank = category income, this is her salary/budget money, NOT an expense. Any credit received from other named people = income. Expenses: transportation=uber/bolt/tfare. food_dining=food/restaurants/supermarket/eat out. clothing_beauty=clothes/shoes/hair/nails. church=offerings/tithes. utilities=electricity/NEPA. data_airtime=MTN data/airtime. health=hospital/pharmacy. loans_transfers=money sent to others as loans. car_auto=fuel/car parts/license. bank_charges=card fee/bank fee. giving=large donations/large church offerings. education=courses/school fees/masterclass. gifts_shopping=gifts/shopping for others. savings=transfers back to own GTBank. SKIP: OWealth Withdrawal, Auto-save to OWealth, Stamp Duty, VAT.";
+      const sysPrompt="You are a JSON API. Parse this Nigerian bank/wallet statement image or PDF and return ONLY a raw JSON object, nothing else, no explanation, no markdown fences. Read the actual statement period from the document itself (it is usually printed near the top, e.g. 'Period: 25 Jun 2026-25 Jul 2026') and use that as the month value, formatted like 'Jun-Jul 2026'. Do not guess or default the month — read it from the document. Format: {\"month\":\"Jun-Jul 2026\",\"transactions\":[{\"desc\":\"short description\",\"amount\":5000,\"date\":\"DD Mon\",\"cat\":\"category_id\",\"source\":\"bank name\"}]}. Category IDs: "+catList+". Rules: Debit/withdrawal = expense. Credit/deposit from someone else, or salary, = category income. A transfer the account owner makes to their OWN other account/savings (matching their own name) = category savings, not income and not a regular expense. transportation=uber/bolt/tfare. food_dining=food/restaurants/supermarket/eat out/groceries. clothing_beauty=clothes/shoes/hair/nails. church=offerings/tithes. utilities=electricity/NEPA/gas/water. data_airtime=data/airtime top-ups. health=hospital/pharmacy/clinic. loans_transfers=money sent to others as loans. car_auto=fuel/car parts/driving license/car service. bank_charges=card fee/SMS fee/bank fee/stamp duty. giving=donations/large church offerings/charity. education=courses/school fees/masterclass. gifts_shopping=gifts/shopping for others. Include every transaction row you can find in the statement — do not skip rows, and do not stop early.";
       const content2=[
         isPdf?{type:"document",source:{type:"base64",media_type:"application/pdf",data:b64}}:{type:"image",source:{type:"base64",media_type:file.type,data:b64}},
         {type:"text",text:"Parse this bank statement and return ALL transactions as JSON. Month is Jun-Jul 2026 for dates June 25 to July 25 2026. Return raw JSON only."}
@@ -395,13 +395,12 @@ function UploadTab({apiKey,cats,onConfirm}){
         }
       }
       const parsed=JSON.parse(jsonStr);
-      var parsedMonth=parsed.month||"Jun-Jul 2026";
-      // Normalize month - if AI returned wrong format, fix it
-      if(parsedMonth.includes("Jul")&&!parsedMonth.includes("Jun"))parsedMonth="Jun-Jul 2026";
-      if(parsedMonth.includes("June")&&parsedMonth.includes("July"))parsedMonth="Jun-Jul 2026";
-      if(parsedMonth==="Jul 2026"||parsedMonth==="July 2026")parsedMonth="Jun-Jul 2026";
+      var parsedMonth=parsed.month||"Unknown period";
       const txnList=(parsed.transactions||[]).map(t=>({...t,id:uid(),month:parsedMonth,amount:Number(t.amount)||0}));
-      setPreview({month:parsed.month||"Jun-Jul 2026",txns:txnList});
+      if(txnList.length===0){
+        throw new Error("The model read the file but found 0 transactions (reported period: \""+parsedMonth+"\"). Raw reply started with: \""+text.slice(0,200)+"\"");
+      }
+      setPreview({month:parsedMonth,txns:txnList});
       setStatus("done");
     }catch(ex){
       // If JSON parse failed, show helpful message
