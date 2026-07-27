@@ -324,7 +324,7 @@ function UploadTab({apiKey,cats,onConfirm}){
         }
         var catList=cats.map(function(c){return c.id+"="+c.label;}).join(", ");
         var sysMsg="You are a JSON API. You ONLY output raw JSON. Never write sentences. Never explain. Output nothing except the JSON object.";
-        var userMsg="Parse this Nigerian bank statement CSV and return a JSON object. Output ONLY the JSON, nothing else, no explanation.\n\nFormat: {\"month\":\"Jun-Jul 2026\",\"transactions\":[{\"desc\":\"short description\",\"amount\":5000,\"date\":\"27 Jun\",\"cat\":\"food_dining\",\"source\":\"OPay\"}]}\n\nCategory IDs: "+catList+"\n\nRules:\n- Debit/withdrawal = expense\n- Credit/deposit from others = income\n- income: salary, received transfers\n- transportation: uber, tfare, bolt\n- food_dining: food, restaurants, groceries, supermarket\n- clothing_beauty: clothes, hair, nails\n- giving: donations, charity, gifts to family\n- utilities: electricity, NEPA, gas\n- data_airtime: MTN, Airtel, data, airtime\n- health: hospital, clinic, pharmacy\n- car_auto: fuel, car parts, driving school\n- bank_charges: SMS fee, ATM fee, card fee\n- education: school fees, courses\n- savings: fixed deposit, investment\n- loans_transfers: money sent as loans\n\nData:\n"+rawText.slice(0,12000);
+        var userMsg="Parse this Nigerian bank statement CSV and return a JSON object. Output ONLY the JSON, nothing else, no explanation.\n\nFormat: {\"month\":\"Jun-Jul 2026\",\"transactions\":[{\"desc\":\"short description\",\"amount\":5000,\"date\":\"27 Jun\",\"cat\":\"food_dining\",\"source\":\"OPay\"}]}\n\nCategory IDs: "+catList+"\n\nRules:\n- Debit/withdrawal = expense\n- Credit/deposit from others = income\n- income: salary, received transfers\n- transportation: uber, tfare, bolt\n- food_dining: food, restaurants, groceries, supermarket\n- clothing_beauty: clothes, hair, nails\n- giving: donations, charity, gifts to family\n- utilities: electricity, NEPA, gas\n- data_airtime: MTN, Airtel, data, airtime\n- health: hospital, clinic, pharmacy\n- car_auto: fuel, car parts, driving school\n- bank_charges: SMS fee, ATM fee, card fee\n- education: school fees, courses\n- savings: fixed deposit, investment\n- loans_transfers: money sent as loans\n\nData:\n"+rawText.slice(0,100000);
         var res=await fetch("https://api.anthropic.com/v1/messages",{
           method:"POST",
           headers:{"Content-Type":"application/json","x-api-key":apiKey,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},
@@ -349,6 +349,9 @@ function UploadTab({apiKey,cats,onConfirm}){
         var parsed=JSON.parse(raw);
         var parsedMonth=parsed.month||"Jun-Jul 2026";
         var txnList=(parsed.transactions||[]).map(function(t){return Object.assign({},t,{id:uid(),month:parsedMonth,amount:Number(t.amount)||0});});
+        if(txnList.length===0){
+          throw new Error("The model found 0 transactions in a "+rawText.length+"-character statement. This usually means the file layout confused it. Try re-uploading, or open the file and confirm it has a normal transaction table.");
+        }
         setPreview({month:parsedMonth,txns:txnList});
         setStatus("done");
       }catch(ex){setStatus("error");setErr("Excel/CSV error: "+ex.message);}
