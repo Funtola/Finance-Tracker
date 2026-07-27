@@ -318,7 +318,7 @@ function UploadTab({apiKey,cats,onConfirm}){
         var catList=cats.map(function(c){return c.id+"="+c.label;}).join(", ");
         
         // Send to AI for categorization
-        var prompt="Categorize these bank transactions into JSON. Return ONLY JSON: {month:'Jun-Jul 2026',transactions:[{desc,amount,date,cat,source}]}. Categories: "+catList+". Data:\n"+rows.slice(0,100).map(function(r){return r.join(" | ");}).join("\n");
+        var prompt="You are parsing OLUWAFUNTO MOTUNRAYO FALUA bank statement from OPay Nigeria. Return ONLY valid JSON, no markdown. Format: {month:'Jun-Jul 2026',transactions:[{desc:string,amount:number,date:string,cat:string,source:'OPay'}]}. Categories: "+catList+". RULES: income=money credited/received into account from other people or own salary transfer. transportation=uber/bolt/tfare/bus. food_dining=food/restaurants/supermarket/groceries/market. clothing_beauty=clothes/shoes/hair/nails/beauty. church=offerings/tithes. utilities=electricity/NEPA/gas/water. data_airtime=MTN/Airtel/data/airtime/subscription. health=hospital/pharmacy/clinic/medical. loans_transfers=money sent to people as loans. car_auto=fuel/car parts/driving/vehicle/license/AC. bank_charges=card fee/SMS fee/ATM fee/bank charges. giving=donations/charity/gifts to family. education=school fees/courses/training. gifts_shopping=gifts/shopping for others. savings=fixed deposit/investment/savings transfer. AMOUNTS: use the debit column for expenses, credit column for income. Here is the data:\n"+rows.slice(0,150).map(function(r){return r.join(" | ");}).join("\n");
         var res=await fetch("https://api.anthropic.com/v1/messages",{
           method:"POST",
           headers:{"Content-Type":"application/json","x-api-key":apiKey,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},
@@ -748,6 +748,88 @@ function BackupTab({state,uploadHistory,onRestore}){
         h("span",{style:{color:"#94a3b8"}},h2.month+" - "+h2.date),
         h("span",{style:{color:"#10b981",fontWeight:700}},h2.count+" transactions")
       ))
+    )
+  );
+}
+
+
+function ManageCategories({cats,onUpdate,onClose}){
+  const[list,setList]=useState(cats.map(function(c){return Object.assign({},c);}));
+  const[newCat,setNewCat]=useState({id:"",label:"",color:"#6366f1",type:"expense"});
+  const COLORS=["#10b981","#6366f1","#f59e0b","#f97316","#ec4899","#14b8a6","#84cc16","#06b6d4","#ef4444","#8b5cf6","#a855f7","#d97706"];
+  function addCat(){
+    if(!newCat.label.trim())return;
+    var id=newCat.label.toLowerCase().replace(/[^a-z0-9]/g,"_");
+    if(list.some(function(c){return c.id===id;})){alert("Category already exists.");return;}
+    setList(function(l){return [...l,Object.assign({},newCat,{id:id})];});
+    setNewCat({id:"",label:"",color:"#6366f1",type:"expense"});
+  }
+  function delCat(id){
+    var defaults=["income","transportation","food_dining","utilities","health","savings","other","giving","education"];
+    if(defaults.includes(id)){alert("Cannot delete default category.");return;}
+    setList(function(l){return l.filter(function(c){return c.id!==id;});});
+  }
+  return h("div",{onClick:onClose,style:{position:"fixed",inset:0,background:"rgba(0,0,0,.85)",zIndex:500,display:"flex",alignItems:"center",justifyContent:"center",padding:16}},
+    h("div",{onClick:function(e){e.stopPropagation();},style:{background:"#111126",borderRadius:16,padding:24,width:"100%",maxWidth:520,maxHeight:"85vh",overflowY:"auto",border:"1px solid #252540"}},
+      h("div",{style:{fontSize:14,fontWeight:800,color:"#fff",marginBottom:4}},"Manage Categories"),
+      h("div",{style:{fontSize:11,color:"#64748b",marginBottom:16}},"Add or remove spending categories"),
+      h("div",{style:{display:"grid",gridTemplateColumns:"1fr auto auto auto",gap:8,marginBottom:14,alignItems:"center"}},
+        h("input",{value:newCat.label,onChange:function(e){setNewCat(function(v){return Object.assign({},v,{label:e.target.value});});},placeholder:"New category name",style:S.inp}),
+        h("select",{value:newCat.type,onChange:function(e){setNewCat(function(v){return Object.assign({},v,{type:e.target.value});});},style:Object.assign({},S.inp,{width:"auto"})},
+          h("option",{value:"expense"},"Expense"),h("option",{value:"income"},"Income")
+        ),
+        h("input",{type:"color",value:newCat.color,onChange:function(e){setNewCat(function(v){return Object.assign({},v,{color:e.target.value});});},style:{width:36,height:34,border:"1px solid #252540",borderRadius:6,background:"#0d0d20",cursor:"pointer",padding:2}}),
+        h("button",{onClick:addCat,style:S.btn()},"Add")
+      ),
+      h("div",{style:{display:"flex",flexWrap:"wrap",gap:5,marginBottom:14}},
+        COLORS.map(function(c){return h("div",{key:c,onClick:function(){setNewCat(function(v){return Object.assign({},v,{color:c});});},style:{width:20,height:20,borderRadius:4,background:c,cursor:"pointer",border:newCat.color===c?"2px solid #fff":"2px solid transparent"}});})
+      ),
+      h("div",{style:{maxHeight:350,overflowY:"auto"}},
+        list.map(function(cat){return h("div",{key:cat.id,style:{display:"flex",alignItems:"center",gap:10,padding:"8px 10px",background:"#0d0d20",borderRadius:8,marginBottom:5}},
+          h("div",{style:{width:12,height:12,borderRadius:3,background:cat.color,flexShrink:0}}),
+          h("span",{style:{flex:1,fontSize:12,color:"#e2e8f0"}}," "+cat.label),
+          h("span",{style:{fontSize:10,color:"#475569"}}," "+cat.type),
+          h("button",{onClick:function(){delCat(cat.id);},style:{background:"transparent",border:"none",color:"#ef4444",cursor:"pointer",fontSize:11}},"Delete")
+        );})
+      ),
+      h("div",{style:{display:"flex",gap:8,marginTop:16}},
+        h("button",{onClick:function(){onUpdate(list);},style:Object.assign({},S.btn(),{flex:1})},"Save Categories"),
+        h("button",{onClick:onClose,style:S.btn("#1a1a38","#94a3b8")},"Cancel")
+      )
+    )
+  );
+}
+
+function BudgetTargets({cats,budgets,month,byCat,onUpdate,onClose}){
+  const[vals,setVals]=useState(Object.assign({},budgets));
+  var expCats=cats.filter(function(c){return c.type==="expense";});
+  return h("div",{onClick:onClose,style:{position:"fixed",inset:0,background:"rgba(0,0,0,.85)",zIndex:500,display:"flex",alignItems:"center",justifyContent:"center",padding:16}},
+    h("div",{onClick:function(e){e.stopPropagation();},style:{background:"#111126",borderRadius:16,padding:24,width:"100%",maxWidth:480,maxHeight:"85vh",overflowY:"auto",border:"1px solid #252540"}},
+      h("div",{style:{fontSize:14,fontWeight:800,color:"#fff",marginBottom:4}},"Budget Targets"),
+      h("div",{style:{fontSize:11,color:"#64748b",marginBottom:16}},"Set monthly budget for each category. Leave 0 for no limit."),
+      expCats.map(function(cat){
+        var spent=byCat[cat.id]||0;
+        var budget=vals[cat.id]||0;
+        var over=budget>0&&spent>budget;
+        return h("div",{key:cat.id,style:{marginBottom:10}},
+          h("div",{style:{display:"flex",justifyContent:"space-between",marginBottom:4}},
+            h("div",{style:{display:"flex",alignItems:"center",gap:6}},
+              h("div",{style:{width:8,height:8,borderRadius:2,background:cat.color}}),
+              h("span",{style:{fontSize:11,color:"#e2e8f0"}}," "+cat.label)
+            ),
+            h("div",{style:{fontSize:10,color:over?"#ef4444":"#64748b"}},spent>0?"Spent: "+fmt(spent):"No spend yet")
+          ),
+          h("div",{style:{display:"flex",alignItems:"center",gap:8}},
+            h("span",{style:{fontSize:10,color:"#475569"}},"Budget: N"),
+            h("input",{type:"number",value:vals[cat.id]||"",onChange:function(e){var v=parseFloat(e.target.value)||0;setVals(function(prev){var n=Object.assign({},prev);n[cat.id]=v;return n;});},placeholder:"0 = no limit",style:Object.assign({},S.inp,{width:140,padding:"5px 8px",fontSize:11})}),
+            budget>0&&spent>0?h("span",{style:{fontSize:10,fontWeight:700,color:over?"#ef4444":"#10b981"}},over?"Over by "+fmt(spent-budget):"Under by "+fmt(budget-spent)):null
+          )
+        );
+      }),
+      h("div",{style:{display:"flex",gap:8,marginTop:16}},
+        h("button",{onClick:function(){onUpdate(vals);},style:Object.assign({},S.btn(),{flex:1})},"Save Budgets"),
+        h("button",{onClick:onClose,style:S.btn("#1a1a38","#94a3b8")},"Cancel")
+      )
     )
   );
 }
