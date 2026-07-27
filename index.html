@@ -78,84 +78,82 @@ function loadState(){
 }
 
 function patchState(state){
-  var hasJunJul=state.transactions.some(function(t){return t.id==="jj075";});
+  var hasJunJul=state.transactions.some(function(t){return t.id==="jj073";});
   if(!hasJunJul){
     var jj=[
-      {id:"jj001",month:"Jun-Jul 2026",cat:"income",amount:1000000,date:"29 Jun",desc:"Monthly Budget Transfer from GTBank",source:"OPay"},
+      {id:"jj001",month:"Jun-Jul 2026",cat:"income",amount:1000000,date:"29 Jun",desc:"Monthly Budget Transfer GTBank Falua Oluwafunto M",source:"OPay"},
       {id:"jj002",month:"Jun-Jul 2026",cat:"data_airtime",amount:900,date:"27 Jun",desc:"MTN Data 2.5GB 2 Day Plan",source:"OPay"},
       {id:"jj003",month:"Jun-Jul 2026",cat:"gifts_shopping",amount:19650,date:"28 Jun",desc:"Birthday gift to sis Royal Prince Supermarket",source:"OPay"},
       {id:"jj004",month:"Jun-Jul 2026",cat:"bank_charges",amount:1500,date:"28 Jun",desc:"Card Issuance and Delivery Fee OPay",source:"OPay"},
       {id:"jj005",month:"Jun-Jul 2026",cat:"transportation",amount:4200,date:"29 Jun",desc:"Uber to office Chimezie Nesta Akubuiro",source:"OPay"},
-      {id:"jj006",month:"Jun-Jul 2026",cat:"food_dining",amount:10100,date:"29 Jun",desc:"Eat out Adijat Akanni",source:"OPay"},
+      {id:"jj006",month:"Jun-Jul 2026",cat:"food_dining",amount:10100,date:"29 Jun",desc:"Eat out Adijat Akanni Monie Point",source:"OPay"},
       {id:"jj007",month:"Jun-Jul 2026",cat:"car_auto",amount:8000,date:"29 Jun",desc:"Driver learner permit Lagsale Online Resources",source:"OPay"},
       {id:"jj008",month:"Jun-Jul 2026",cat:"food_dining",amount:4000,date:"29 Jun",desc:"Fruit juice Christiana Adama Nwani",source:"OPay"},
-      {id:"jj009",month:"Jun-Jul 2026",cat:"car_auto",amount:2400,date:"29 Jun",desc:"Car driving licenses delivery Godwin Ngare",source:"OPay"},
-      {id:"jj010",month:"Jun-Jul 2026",cat:"transportation",amount:12500,date:"29 Jun",desc:"Uber to Ikorodu Solomon Omodiale",source:"OPay"},
-      {id:"jj011",month:"Jun-Jul 2026",cat:"giving",amount:393500,date:"29 Jun",desc:"Church Offering The Powerpoint Tribesmen",source:"OPay"},
-      {id:"jj012",month:"Jun-Jul 2026",cat:"education",amount:106693.51,date:"29 Jun",desc:"Paid for Master Program Courses Paystack",source:"OPay"},
+      {id:"jj009",month:"Jun-Jul 2026",cat:"car_auto",amount:2400,date:"29 Jun",desc:"Car driving licenses delivery Godwin Ngare Atam",source:"OPay"},
+      {id:"jj010",month:"Jun-Jul 2026",cat:"transportation",amount:12500,date:"29 Jun",desc:"Uber to Ikorodu Solomon Omodiale Imafidon",source:"OPay"},
+      {id:"jj011",month:"Jun-Jul 2026",cat:"giving",amount:393500,date:"29 Jun",desc:"Church Offering The Powerpoint Tribesmen Zenith Bank",source:"OPay"},
+      {id:"jj012",month:"Jun-Jul 2026",cat:"education",amount:106693.51,date:"29 Jun",desc:"Master Program Courses Paystack Payment Limited",source:"OPay"},
       {id:"jj013",month:"Jun-Jul 2026",cat:"car_auto",amount:2000,date:"30 Jun",desc:"Driving license sticker Emmaco Auto Venture",source:"OPay"},
-      {id:"jj014",month:"Jun-Jul 2026",cat:"loans_transfers",amount:100000,date:"30 Jun",desc:"Loan to Dolapo Afolabi Kayode Isaac",source:"OPay"},
+      {id:"jj014",month:"Jun-Jul 2026",cat:"loans_transfers",amount:100000,date:"30 Jun",desc:"Loan to Dolapo via Afolabi Kayode Isaac",source:"OPay"},
       {id:"jj015",month:"Jun-Jul 2026",cat:"utilities",amount:3800,date:"30 Jun",desc:"Electricity Capricorn Ikeja 16.8kWh",source:"OPay"},
-      {id:"jj016",month:"Jun-Jul 2026",cat:"giving",amount:100000,date:"01 Jul",desc:"Giving to mum Falua Modupe Florence",source:"OPay"},
+      {id:"jj016",month:"Jun-Jul 2026",cat:"giving",amount:100000,date:"01 Jul",desc:"Giving to mum Falua Modupe Florence First Bank",source:"OPay"},
       {id:"jj017",month:"Jun-Jul 2026",cat:"clothing_beauty",amount:64000,date:"01 Jul",desc:"Cloth for myself and gift to In-law Falua Modupe Florence",source:"OPay"},
-      {id:"jj018",month:"Jun-Jul 2026",cat:"clothing_beauty",amount:60000,date:"01 Jul",desc:"Purchase of Clothings transfer to Stanbic",source:"OPay"},
-      {id:"jj019",month:"Jun-Jul 2026",cat:"transportation",amount:5000,date:"01 Jul",desc:"Tfare to camp Opeyemi Falua",source:"OPay"},
-      {id:"jj020",month:"Jun-Jul 2026",cat:"transportation",amount:5000,date:"03 Jul",desc:"Tfareeeee to camp Opeyemi Falua",source:"OPay"},
-      {id:"jj021",month:"Jun-Jul 2026",cat:"car_auto",amount:9800,date:"03 Jul",desc:"Driving lesson Abdulmalik Adetola Karere",source:"OPay"},
-      {id:"jj022",month:"Jun-Jul 2026",cat:"income",amount:15000,date:"04 Jul",desc:"Fuel money received from Damilola Fidelix Ilesanmi",source:"OPay"},
-      {id:"jj023",month:"Jun-Jul 2026",cat:"data_airtime",amount:20410,date:"04 Jul",desc:"Microsoft Subscription Ikenze Favour Mgbede",source:"OPay"},
-      {id:"jj024",month:"Jun-Jul 2026",cat:"transportation",amount:1750,date:"05 Jul",desc:"Uber to church from IK Olaitan McCarthy",source:"OPay"},
-      {id:"jj025",month:"Jun-Jul 2026",cat:"income",amount:30000,date:"05 Jul",desc:"Income from Afolabi Kayode Isaac",source:"OPay"},
-      {id:"jj026",month:"Jun-Jul 2026",cat:"transportation",amount:1000,date:"06 Jul",desc:"Tfare for the week Opeyemi Falua",source:"OPay"},
-      {id:"jj027",month:"Jun-Jul 2026",cat:"other",amount:1700,date:"07 Jul",desc:"Printing Oluwakemi Ramota Aro",source:"OPay"},
-      {id:"jj028",month:"Jun-Jul 2026",cat:"car_auto",amount:40000,date:"08 Jul",desc:"Car AC Rotimi Falowo Access Bank",source:"OPay"},
-      {id:"jj029",month:"Jun-Jul 2026",cat:"utilities",amount:6000,date:"08 Jul",desc:"Electricity Capricorn Ikeja 6.9kWh",source:"OPay"},
-      {id:"jj030",month:"Jun-Jul 2026",cat:"income",amount:9000,date:"08 Jul",desc:"Income SNFN event spend Olajumoke Asabi",source:"OPay"},
-      {id:"jj031",month:"Jun-Jul 2026",cat:"data_airtime",amount:500,date:"09 Jul",desc:"MTN Airtime",source:"OPay"},
-      {id:"jj032",month:"Jun-Jul 2026",cat:"car_auto",amount:15000,date:"09 Jul",desc:"Driving School Lateef Adewale Karere",source:"OPay"},
-      {id:"jj033",month:"Jun-Jul 2026",cat:"income",amount:440000,date:"09 Jul",desc:"Income Transfer from Danalor Prime Trade Ltd",source:"OPay"},
-      {id:"jj034",month:"Jun-Jul 2026",cat:"savings",amount:440000,date:"09 Jul",desc:"Transfer to my GTBank to save",source:"OPay"},
-      {id:"jj035",month:"Jun-Jul 2026",cat:"food_dining",amount:20410,date:"09 Jul",desc:"Groceries Justrite Ojodu",source:"OPay"},
-      {id:"jj036",month:"Jun-Jul 2026",cat:"food_dining",amount:1000,date:"09 Jul",desc:"Groundnut Abdulwasiu Sani",source:"OPay"},
-      {id:"jj037",month:"Jun-Jul 2026",cat:"food_dining",amount:1700,date:"09 Jul",desc:"Vegetable Sarah Amarachi Nwafor",source:"OPay"},
-      {id:"jj038",month:"Jun-Jul 2026",cat:"food_dining",amount:6000,date:"09 Jul",desc:"Pepper and fruits Zeyanu Muhammed Awa",source:"OPay"},
-      {id:"jj039",month:"Jun-Jul 2026",cat:"other",amount:5860,date:"11 Jul",desc:"Mopping stick and Brushes Jendol Superstores",source:"OPay"},
-      {id:"jj040",month:"Jun-Jul 2026",cat:"car_auto",amount:10200,date:"11 Jul",desc:"Car Fuel Simisolaoluwa Elizabeth Famuyide",source:"OPay"},
-      {id:"jj041",month:"Jun-Jul 2026",cat:"gifts_shopping",amount:4000,date:"12 Jul",desc:"Gift Onyinye Chizea",source:"OPay"},
-      {id:"jj042",month:"Jun-Jul 2026",cat:"food_dining",amount:4500,date:"12 Jul",desc:"Pepper Taiwo Funke Osein",source:"OPay"},
-      {id:"jj043",month:"Jun-Jul 2026",cat:"food_dining",amount:3000,date:"12 Jul",desc:"Ogbono soup Kafilat Ajoke Adeosun",source:"OPay"},
-      {id:"jj044",month:"Jun-Jul 2026",cat:"food_dining",amount:10500,date:"12 Jul",desc:"Egg Hauwa Damilola Olanipekun",source:"OPay"},
-      {id:"jj045",month:"Jun-Jul 2026",cat:"food_dining",amount:3900,date:"12 Jul",desc:"Chicken Oluwatosin Janet Ikukoyi",source:"OPay"},
-      {id:"jj046",month:"Jun-Jul 2026",cat:"income",amount:100000,date:"13 Jul",desc:"Income Aguegboh Obiora Kingsley NIP Transfer",source:"OPay"},
-      {id:"jj047",month:"Jun-Jul 2026",cat:"income",amount:65000,date:"13 Jul",desc:"Loan Refund MTN Router Expenses",source:"OPay"},
-      {id:"jj048",month:"Jun-Jul 2026",cat:"data_airtime",amount:2500,date:"13 Jul",desc:"MTN Router Perpetual Chidera Nze",source:"OPay"},
-      {id:"jj049",month:"Jun-Jul 2026",cat:"utilities",amount:1800,date:"13 Jul",desc:"Electricity Capricorn Ikeja 11.1kWh",source:"OPay"},
-      {id:"jj050",month:"Jun-Jul 2026",cat:"food_dining",amount:3000,date:"13 Jul",desc:"Drink Augustina Adenike Ojo",source:"OPay"},
-      {id:"jj051",month:"Jun-Jul 2026",cat:"food_dining",amount:9000,date:"14 Jul",desc:"Potatoes Idris Ibrahim",source:"OPay"},
-      {id:"jj052",month:"Jun-Jul 2026",cat:"utilities",amount:18000,date:"14 Jul",desc:"Gas Ugochukwu Sunday",source:"OPay"},
-      {id:"jj053",month:"Jun-Jul 2026",cat:"health",amount:80000,date:"15 Jul",desc:"Tooth extraction consultation Beaconhill Smile Clinic",source:"OPay"},
-      {id:"jj054",month:"Jun-Jul 2026",cat:"savings",amount:30000,date:"15 Jul",desc:"Investment Bamboosystems Paystack",source:"OPay"},
-      {id:"jj055",month:"Jun-Jul 2026",cat:"car_auto",amount:9000,date:"15 Jul",desc:"Fuel Modinat Abiola Oderinde",source:"OPay"},
-      {id:"jj056",month:"Jun-Jul 2026",cat:"clothing_beauty",amount:4513.51,date:"15 Jul",desc:"Cloth Aso Ebi Adelabu Dolapo Temitayo",source:"OPay"},
-      {id:"jj057",month:"Jun-Jul 2026",cat:"income",amount:9000,date:"15 Jul",desc:"Income from Adelabu Dolapo Temitayo",source:"OPay"},
-      {id:"jj058",month:"Jun-Jul 2026",cat:"utilities",amount:9000,date:"18 Jul",desc:"Electricity Capricorn Ikeja 22.2kWh",source:"OPay"},
-      {id:"jj059",month:"Jun-Jul 2026",cat:"food_dining",amount:5000,date:"18 Jul",desc:"Fish Onyinye Catherine Emmanuel",source:"OPay"},
-      {id:"jj060",month:"Jun-Jul 2026",cat:"food_dining",amount:4100,date:"19 Jul",desc:"Bread Justrite Ojodu",source:"OPay"},
-      {id:"jj061",month:"Jun-Jul 2026",cat:"food_dining",amount:9000,date:"19 Jul",desc:"Purchase Zeyanu Muhammed Awa",source:"OPay"},
-      {id:"jj062",month:"Jun-Jul 2026",cat:"other",amount:3900,date:"19 Jul",desc:"Shayo Olayinka Olafimihan",source:"OPay"},
-      {id:"jj063",month:"Jun-Jul 2026",cat:"income",amount:10000,date:"21 Jul",desc:"Income ALAT NIP Transfer Wema Bank",source:"OPay"},
-      {id:"jj064",month:"Jun-Jul 2026",cat:"food_dining",amount:1000,date:"21 Jul",desc:"Food Labule Afrikana Ogudu",source:"OPay"},
-      {id:"jj065",month:"Jun-Jul 2026",cat:"income",amount:5100,date:"21 Jul",desc:"Income QR Transfer Bolarinwa Oyindamola Abimbola FCMB",source:"OPay"},
-      {id:"jj066",month:"Jun-Jul 2026",cat:"giving",amount:2200,date:"21 Jul",desc:"Charity Onyinye Catherine Emmanuel",source:"OPay"},
-      {id:"jj067",month:"Jun-Jul 2026",cat:"income",amount:3500,date:"23 Jul",desc:"Income from Stanbic to OPay",source:"OPay"},
-      {id:"jj068",month:"Jun-Jul 2026",cat:"utilities",amount:20000,date:"23 Jul",desc:"Electricity Capricorn Ikeja 15.5kWh",source:"OPay"},
-      {id:"jj069",month:"Jun-Jul 2026",cat:"income",amount:2500,date:"24 Jul",desc:"Income Afolabi Kayode Isaac NIP Transfer",source:"OPay"},
-      {id:"jj070",month:"Jun-Jul 2026",cat:"other",amount:9500,date:"24 Jul",desc:"Printing Dnet Ventures Providus Bank",source:"OPay"},
-      {id:"jj071",month:"Jun-Jul 2026",cat:"clothing_beauty",amount:7000,date:"24 Jul",desc:"Hair Chinyere Salomen Nweke",source:"OPay"},
-      {id:"jj072",month:"Jun-Jul 2026",cat:"clothing_beauty",amount:10000,date:"24 Jul",desc:"Hair Onyenachi Rosemary Oluhara",source:"OPay"},
-      {id:"jj073",month:"Jun-Jul 2026",cat:"income",amount:10000,date:"25 Jul",desc:"Income ALAT NIP Transfer fuel Wema Bank",source:"OPay"},
-      {id:"jj074",month:"Jun-Jul 2026",cat:"income",amount:10000,date:"25 Jul",desc:"Income ALAT NIP Transfer fuel Wema Bank 2",source:"OPay"},
-      {id:"jj075",month:"Jun-Jul 2026",cat:"car_auto",amount:20000,date:"25 Jul",desc:"Fuel Omotolani Maria Jimoh",source:"OPay"},
+      {id:"jj018",month:"Jun-Jul 2026",cat:"clothing_beauty",amount:60000,date:"01 Jul",desc:"Purchase Clothings Stanbic Oluwafunto Motunrayo",source:"OPay"},
+      {id:"jj019",month:"Jun-Jul 2026",cat:"transportation",amount:20000,date:"03 Jul",desc:"Tfare Opeyemi Falua Monie Point",source:"OPay"},
+      {id:"jj020",month:"Jun-Jul 2026",cat:"car_auto",amount:5000,date:"03 Jul",desc:"Driving lesson Abdulmalik Adetola Karere OPay",source:"OPay"},
+      {id:"jj021",month:"Jun-Jul 2026",cat:"income",amount:30000,date:"04 Jul",desc:"Fuel money received from Damilola Fidelix Ilesanmi",source:"OPay"},
+      {id:"jj022",month:"Jun-Jul 2026",cat:"data_airtime",amount:15000,date:"04 Jul",desc:"Microsoft Subscription Ikenze Favour Mgbede First Bank",source:"OPay"},
+      {id:"jj023",month:"Jun-Jul 2026",cat:"transportation",amount:9800,date:"05 Jul",desc:"Uber to church from IK Olaitan McCarthy Alawumi OPay",source:"OPay"},
+      {id:"jj024",month:"Jun-Jul 2026",cat:"income",amount:15000,date:"05 Jul",desc:"Income from Afolabi Kayode Isaac First Bank",source:"OPay"},
+      {id:"jj025",month:"Jun-Jul 2026",cat:"transportation",amount:20000,date:"06 Jul",desc:"Tfare for the week Opeyemi Falua Monie Point",source:"OPay"},
+      {id:"jj026",month:"Jun-Jul 2026",cat:"other",amount:1750,date:"07 Jul",desc:"Printing Oluwakemi Ramota Aro OPay",source:"OPay"},
+      {id:"jj027",month:"Jun-Jul 2026",cat:"car_auto",amount:40000,date:"08 Jul",desc:"Car AC Rotimi Falowo Access Bank",source:"OPay"},
+      {id:"jj028",month:"Jun-Jul 2026",cat:"utilities",amount:1000,date:"08 Jul",desc:"Electricity Capricorn Ikeja 6.9kWh",source:"OPay"},
+      {id:"jj029",month:"Jun-Jul 2026",cat:"income",amount:30000,date:"08 Jul",desc:"Income SNFN event spend Olajumoke Asabi Ogunmolu Zenith",source:"OPay"},
+      {id:"jj030",month:"Jun-Jul 2026",cat:"car_auto",amount:15000,date:"09 Jul",desc:"Driving School Lateef Adewale Karere OPay",source:"OPay"},
+      {id:"jj031",month:"Jun-Jul 2026",cat:"income",amount:440000,date:"09 Jul",desc:"Income Transfer from Danalor Prime Trade Ltd GTBank",source:"OPay"},
+      {id:"jj032",month:"Jun-Jul 2026",cat:"savings",amount:440000,date:"09 Jul",desc:"Transfer to my GTBank to save Falua Oluwafunto M",source:"OPay"},
+      {id:"jj033",month:"Jun-Jul 2026",cat:"food_dining",amount:20410,date:"09 Jul",desc:"Groceries Justrite Ojodu Monie Point",source:"OPay"},
+      {id:"jj034",month:"Jun-Jul 2026",cat:"food_dining",amount:1000,date:"09 Jul",desc:"Groundnut Abdulwasiu Sani Monie Point",source:"OPay"},
+      {id:"jj035",month:"Jun-Jul 2026",cat:"food_dining",amount:1700,date:"09 Jul",desc:"Vegetable Sarah Amarachi Nwafor OPay",source:"OPay"},
+      {id:"jj036",month:"Jun-Jul 2026",cat:"food_dining",amount:6000,date:"09 Jul",desc:"Pepper and fruits Zeyanu Muhammed Awa OPay",source:"OPay"},
+      {id:"jj037",month:"Jun-Jul 2026",cat:"other",amount:5860,date:"11 Jul",desc:"Mopping stick and Brushes Jendol Superstores Wema",source:"OPay"},
+      {id:"jj038",month:"Jun-Jul 2026",cat:"car_auto",amount:10200,date:"11 Jul",desc:"Car Fuel Simisolaoluwa Elizabeth Famuyide OPay",source:"OPay"},
+      {id:"jj039",month:"Jun-Jul 2026",cat:"gifts_shopping",amount:15000,date:"12 Jul",desc:"Gift Onyinye Chizea OPay",source:"OPay"},
+      {id:"jj040",month:"Jun-Jul 2026",cat:"food_dining",amount:4000,date:"12 Jul",desc:"Pepper Taiwo Funke Osein OPay",source:"OPay"},
+      {id:"jj041",month:"Jun-Jul 2026",cat:"food_dining",amount:4500,date:"12 Jul",desc:"Ogbono soup Kafilat Ajoke Adeosun Sterling Bank",source:"OPay"},
+      {id:"jj042",month:"Jun-Jul 2026",cat:"food_dining",amount:3000,date:"12 Jul",desc:"Egg Hauwa Damilola Olanipekun OPay",source:"OPay"},
+      {id:"jj043",month:"Jun-Jul 2026",cat:"food_dining",amount:10500,date:"12 Jul",desc:"Chicken Oluwatosin Janet Ikukoyi OPay",source:"OPay"},
+      {id:"jj044",month:"Jun-Jul 2026",cat:"income",amount:80000,date:"13 Jul",desc:"Income Aguegboh Obiora Kingsley GTBank NIP Transfer",source:"OPay"},
+      {id:"jj045",month:"Jun-Jul 2026",cat:"income",amount:100000,date:"13 Jul",desc:"Income ALAT NIP Transfer Wema Bank Oluwafunto",source:"OPay"},
+      {id:"jj046",month:"Jun-Jul 2026",cat:"loans_transfers",amount:65000,date:"13 Jul",desc:"MTN Router Perpetual Chidera Nze OPay",source:"OPay"},
+      {id:"jj047",month:"Jun-Jul 2026",cat:"utilities",amount:2500,date:"13 Jul",desc:"Electricity Capricorn Ikeja 11.1kWh",source:"OPay"},
+      {id:"jj048",month:"Jun-Jul 2026",cat:"food_dining",amount:1800,date:"13 Jul",desc:"Drink Augustina Adenike Ojo OPay",source:"OPay"},
+      {id:"jj049",month:"Jun-Jul 2026",cat:"food_dining",amount:3000,date:"14 Jul",desc:"Potatoes Idris Ibrahim First Bank",source:"OPay"},
+      {id:"jj050",month:"Jun-Jul 2026",cat:"utilities",amount:9000,date:"14 Jul",desc:"Gas Ugochukwu Sunday PalmPay",source:"OPay"},
+      {id:"jj051",month:"Jun-Jul 2026",cat:"health",amount:18000,date:"15 Jul",desc:"Tooth extraction consultation Beaconhill Smile Clinic",source:"OPay"},
+      {id:"jj052",month:"Jun-Jul 2026",cat:"savings",amount:80000,date:"15 Jul",desc:"Investment Bamboosystems Falua Oluwafunto Paystack",source:"OPay"},
+      {id:"jj053",month:"Jun-Jul 2026",cat:"car_auto",amount:30000,date:"15 Jul",desc:"Fuel Modinat Abiola Oderinde OPay",source:"OPay"},
+      {id:"jj054",month:"Jun-Jul 2026",cat:"clothing_beauty",amount:9000,date:"15 Jul",desc:"Cloth Aso Ebi Adelabu Dolapo Temitayo GTBank",source:"OPay"},
+      {id:"jj055",month:"Jun-Jul 2026",cat:"income",amount:9000,date:"15 Jul",desc:"Income from Adelabu Dolapo Temitayo GTBank",source:"OPay"},
+      {id:"jj056",month:"Jun-Jul 2026",cat:"utilities",amount:5000,date:"18 Jul",desc:"Electricity Capricorn Ikeja 22.2kWh",source:"OPay"},
+      {id:"jj057",month:"Jun-Jul 2026",cat:"food_dining",amount:2200,date:"18 Jul",desc:"Fish Onyinye Catherine Emmanuel Monie Point",source:"OPay"},
+      {id:"jj058",month:"Jun-Jul 2026",cat:"food_dining",amount:1400,date:"19 Jul",desc:"Bread Justrite Ojodu Monie Point",source:"OPay"},
+      {id:"jj059",month:"Jun-Jul 2026",cat:"food_dining",amount:4500,date:"19 Jul",desc:"Purchase Zeyanu Muhammed Awa OPay",source:"OPay"},
+      {id:"jj060",month:"Jun-Jul 2026",cat:"other",amount:9000,date:"19 Jul",desc:"Shayo Olayinka Olafimihan OPay",source:"OPay"},
+      {id:"jj061",month:"Jun-Jul 2026",cat:"income",amount:10000,date:"21 Jul",desc:"Income ALAT NIP Transfer Wema Bank Oluwafunto",source:"OPay"},
+      {id:"jj062",month:"Jun-Jul 2026",cat:"food_dining",amount:3900,date:"21 Jul",desc:"Food Labule Afrikana Ogudu OPay",source:"OPay"},
+      {id:"jj063",month:"Jun-Jul 2026",cat:"income",amount:1000,date:"21 Jul",desc:"Income QR Transfer Bolarinwa Oyindamola Abimbola FCMB",source:"OPay"},
+      {id:"jj064",month:"Jun-Jul 2026",cat:"giving",amount:5100,date:"21 Jul",desc:"Charity Onyinye Catherine Emmanuel Monie Point",source:"OPay"},
+      {id:"jj065",month:"Jun-Jul 2026",cat:"income",amount:2200,date:"23 Jul",desc:"Income from Stanbic to OPay Oluwafunto",source:"OPay"},
+      {id:"jj066",month:"Jun-Jul 2026",cat:"utilities",amount:3500,date:"23 Jul",desc:"Electricity Capricorn Ikeja 15.5kWh",source:"OPay"},
+      {id:"jj067",month:"Jun-Jul 2026",cat:"income",amount:20000,date:"24 Jul",desc:"Income Afolabi Kayode Isaac First Bank NIP Transfer",source:"OPay"},
+      {id:"jj068",month:"Jun-Jul 2026",cat:"other",amount:2500,date:"24 Jul",desc:"Printing Dnet Ventures Providus Bank",source:"OPay"},
+      {id:"jj069",month:"Jun-Jul 2026",cat:"clothing_beauty",amount:9500,date:"24 Jul",desc:"Hair Chinyere Salomen Nweke OPay",source:"OPay"},
+      {id:"jj070",month:"Jun-Jul 2026",cat:"clothing_beauty",amount:7000,date:"24 Jul",desc:"Hair Onyenachi Rosemary Oluhara OPay",source:"OPay"},
+      {id:"jj071",month:"Jun-Jul 2026",cat:"income",amount:10000,date:"25 Jul",desc:"Income ALAT NIP Transfer Wema Bank fuel",source:"OPay"},
+      {id:"jj072",month:"Jun-Jul 2026",cat:"income",amount:10000,date:"25 Jul",desc:"Income ALAT NIP Transfer Wema Bank fuel 2",source:"OPay"},
+      {id:"jj073",month:"Jun-Jul 2026",cat:"car_auto",amount:20000,date:"25 Jul",desc:"Fuel Omotolani Maria Jimoh OPay",source:"OPay"},
     ];
     var cleaned=state.transactions.filter(function(t){return t.month!=="Jun-Jul 2026"&&t.month!=="Jul 2026"&&t.month!=="July 2026";});
     state.transactions=cleaned.concat(jj);
@@ -377,8 +375,46 @@ function UploadTab({apiKey,cats,onConfirm}){
   async function handleFile(e){
     const file=e.target.files[0];if(!file)return;
     if(!apiKey){setStatus("error");setErr("Save your API key in the AI Advisor panel first.");return;}
+    
+    // Handle Excel/CSV files
+    const isExcel=file.name.endsWith(".xlsx")||file.name.endsWith(".xls");
+    const isCsv=file.name.endsWith(".csv")||file.type==="text/csv";
+    
+    if(isExcel||isCsv){
+      setStatus("loading");setPreview(null);setErr("");
+      try{
+        var text=await new Promise(function(res,rej){var r=new FileReader();r.onload=function(ev){res(ev.target.result);};r.onerror=rej;r.readAsText(file);});
+        // Parse CSV or try to read as CSV (Excel exported as CSV)
+        var rows=text.split("\n").map(function(r){return r.split(",").map(function(c){return c.replace(/^"|"$/g,"").trim();});});
+        var headers=rows[0];
+        var txns=[];
+        var catList=cats.map(function(c){return c.id+"="+c.label;}).join(", ");
+        
+        // Send to AI for categorization
+        var prompt="Categorize these bank transactions into JSON. Return ONLY JSON: {month:'Jun-Jul 2026',transactions:[{desc,amount,date,cat,source}]}. Categories: "+catList+". Data:\n"+rows.slice(0,100).map(function(r){return r.join(" | ");}).join("\n");
+        var res=await fetch("https://api.anthropic.com/v1/messages",{
+          method:"POST",
+          headers:{"Content-Type":"application/json","x-api-key":apiKey,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},
+          body:JSON.stringify({model:"claude-sonnet-4-6",max_tokens:8192,messages:[{role:"user",content:prompt}]})
+        });
+        var j=await res.json();
+        if(j.error)throw new Error(j.error.message);
+        var text2=(j.content||[]).map(function(i){return i.text||"";}).join("");
+        var bq=String.fromCharCode(96);
+        var cleaned=text2.split(bq+bq+bq+"json").join("").split(bq+bq+bq).join("").trim();
+        try{JSON.parse(cleaned);}catch(e){var lc=cleaned.lastIndexOf("},");if(lc>0)cleaned=cleaned.substring(0,lc+1)+"]}";}
+        var parsed=JSON.parse(cleaned);
+        var parsedMonth=parsed.month||"Jun-Jul 2026";
+        var txnList=(parsed.transactions||[]).map(function(t){return Object.assign({},t,{id:uid(),month:parsedMonth,amount:Number(t.amount)||0});});
+        setPreview({month:parsedMonth,txns:txnList});
+        setStatus("done");
+      }catch(ex){setStatus("error");setErr("Excel/CSV error: "+ex.message);}
+      e.target.value="";
+      return;
+    }
+    
     const isPdf=file.type==="application/pdf",isImg=file.type.startsWith("image/");
-    if(!isPdf&&!isImg){setStatus("error");setErr("Upload a PDF or image.");return;}
+    if(!isPdf&&!isImg){setStatus("error");setErr("Upload a PDF, image, Excel or CSV file.");return;}
     setStatus("loading");setPreview(null);setErr("");
     try{
       const b64=await new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result.split(",")[1]);r.onerror=rej;r.readAsDataURL(file);});
@@ -440,7 +476,7 @@ function UploadTab({apiKey,cats,onConfirm}){
       h("div",{style:{fontSize:11,color:"#64748b",marginBottom:14}},"Stanbic - OPay - GTBank - PDF or image"),
       h("label",{style:{display:"inline-block",padding:"9px 22px",background:"#6366f1",borderRadius:9,color:"#fff",fontWeight:700,fontSize:12,cursor:"pointer"}},
         status==="loading"?"Analysing...":"Choose File",
-        h("input",{type:"file",accept:".pdf,image/*",onChange:handleFile,style:{display:"none"},disabled:status==="loading"})
+        h("input",{type:"file",accept:".pdf,image/*,.xlsx,.xls,.csv",onChange:handleFile,style:{display:"none"},disabled:status==="loading"})
       )
     ),
     status==="loading"&&h("div",{style:{textAlign:"center",padding:20,color:"#a5b4fc"}},"Reading statement... 20 to 40 seconds"),
@@ -605,8 +641,9 @@ function InvestmentsTab(props){
       investments.map(function(item){
         var stats=getStats(item);
         var ttype=typeMap[item.type]||{color:"#6366f1",label:item.type};
+        var[open,setOpen]=useState(false);
         return h("div",{key:item.id,style:Object.assign({},S.card(),{border:"1px solid "+ttype.color+"30"})},
-          h("div",{style:{display:"flex",justifyContent:"space-between",marginBottom:10}},
+          h("div",{onClick:function(){setOpen(function(v){return !v;});},style:{display:"flex",justifyContent:"space-between",marginBottom:open?10:0,cursor:"pointer"}},
             h("div",null,
               h("div",{style:{fontSize:13,fontWeight:700,color:"#e2e8f0",marginBottom:4}},item.name),
               h("div",{style:{display:"flex",gap:8,flexWrap:"wrap",fontSize:10,color:"#64748b"}},
@@ -616,15 +653,26 @@ function InvestmentsTab(props){
                 item.notes&&h("span",null,item.notes)
               )
             ),
-            h("button",{onClick:function(){delInv(item.id);},style:{background:"transparent",border:"none",color:"#ef4444",cursor:"pointer",fontSize:11}},"Delete")
+            h("div",{style:{display:"flex",alignItems:"center",gap:10}},
+              !open&&h("div",{style:{display:"flex",gap:12,fontSize:11}},
+                h("span",{style:{color:"#6366f1",fontWeight:700}},fmt(stats.p)),
+                h("span",{style:{color:"#f59e0b"}},stats.r+"%"),
+                h("span",{style:{color:stats.pct>=100?"#10b981":"#64748b"}},stats.pct.toFixed(0)+"% recv"),
+                h("span",{style:S.tag(ttype.color)},ttype.label)
+              ),
+              h("div",{style:{display:"flex",alignItems:"center",gap:8}},
+                h("span",{style:{fontSize:10,color:"#475569"}},(open?"▲":"▼")),
+                h("button",{onClick:function(e){e.stopPropagation();delInv(item.id);},style:{background:"transparent",border:"none",color:"#ef4444",cursor:"pointer",fontSize:11}},"Delete")
+              )
+            )
           ),
-          h("div",{style:{display:"grid",gridTemplateColumns:"1fr 1fr 1fr 1fr",gap:8,marginBottom:12}},
+          open&&h("div",{style:{display:"grid",gridTemplateColumns:"1fr 1fr 1fr 1fr",gap:8,marginBottom:12}},
             h("div",{style:{background:"#0d0d20",borderRadius:8,padding:"8px 10px"}},h("div",{style:{fontSize:9,color:"#64748b"}},"Principal"),h("div",{style:{fontSize:12,fontWeight:800,color:"#6366f1"}},fmt(stats.p))),
             h("div",{style:{background:"#0d0d20",borderRadius:8,padding:"8px 10px"}},h("div",{style:{fontSize:9,color:"#64748b"}},"Annual Rate"),h("div",{style:{fontSize:12,fontWeight:800,color:"#f59e0b"}},stats.r+"%")),
             h("div",{style:{background:"#0d0d20",borderRadius:8,padding:"8px 10px"}},h("div",{style:{fontSize:9,color:"#64748b"}},"Expected Total"),h("div",{style:{fontSize:12,fontWeight:800,color:"#a5b4fc"}},fmt(stats.expectedTotal))),
             h("div",{style:{background:"#0d0d20",borderRadius:8,padding:"8px 10px"}},h("div",{style:{fontSize:9,color:"#64748b"}},"Interest"),h("div",{style:{fontSize:12,fontWeight:800,color:"#10b981"}},fmt(stats.interest)))
           ),
-          h("div",{style:{marginBottom:10}},
+          open&&h("div",{style:{marginBottom:10}},
             h("div",{style:{display:"flex",justifyContent:"space-between",marginBottom:5}},
               h("span",{style:{fontSize:11,color:"#94a3b8",fontWeight:600}},"Repayment Progress"),
               h("span",{style:{fontSize:11,fontWeight:700,color:stats.pct>=100?"#10b981":"#f59e0b"}},stats.pct.toFixed(1)+"% received")
@@ -637,14 +685,14 @@ function InvestmentsTab(props){
               h("span",{style:{color:stats.toRecoup>0?"#f59e0b":"#10b981",fontWeight:700}},stats.toRecoup>0?"Still to receive: "+fmt(stats.toRecoup):"Fully repaid!")
             )
           ),
-          item.payments&&item.payments.length>0&&h("div",{style:{background:"#0d0d20",borderRadius:8,padding:10,marginBottom:10}},
+          open&&item.payments&&item.payments.length>0&&h("div",{style:{background:"#0d0d20",borderRadius:8,padding:10,marginBottom:10}},
             h("div",{style:{fontSize:10,color:"#64748b",fontWeight:600,marginBottom:8,textTransform:"uppercase"}},"Payment History"),
             item.payments.map(function(p){return h("div",{key:p.id,style:{display:"flex",justifyContent:"space-between",padding:"5px 0",borderBottom:"1px solid #1a1a38",fontSize:11}},
               h("span",{style:{color:"#94a3b8"}},p.date+(p.note?" - "+p.note:"")),
               h("span",{style:{color:"#10b981",fontWeight:700}},fmt(p.amount))
             );})
           ),
-          h("button",{onClick:function(){setShowPay(item.id);},style:Object.assign({},S.btn("#10b98120","#10b981"),{border:"1px solid #10b98140",width:"100%",padding:9,fontSize:12})},"+ Record Payment Received")
+          open&&h("button",{onClick:function(){setShowPay(item.id);},style:Object.assign({},S.btn("#10b98120","#10b981"),{border:"1px solid #10b98140",width:"100%",padding:9,fontSize:12})},"+ Record Payment Received")
         );
       })
     ),
