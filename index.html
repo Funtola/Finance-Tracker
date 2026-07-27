@@ -310,27 +310,31 @@ function UploadTab({apiKey,cats,onConfirm}){
     if(isExcel||isCsv){
       setStatus("loading");setPreview(null);setErr("");
       try{
-        var text=await new Promise(function(res,rej){var r=new FileReader();r.onload=function(ev){res(ev.target.result);};r.onerror=rej;r.readAsText(file);});
-        // Parse CSV or try to read as CSV (Excel exported as CSV)
-        var rows=text.split("\n").map(function(r){return r.split(",").map(function(c){return c.replace(/^"|"$/g,"").trim();});});
-        var headers=rows[0];
-        var txns=[];
+        var rawText=await new Promise(function(res,rej){var r=new FileReader();r.onload=function(ev){res(ev.target.result);};r.onerror=rej;r.readAsText(file);});
         var catList=cats.map(function(c){return c.id+"="+c.label;}).join(", ");
-        
-        // Send to AI for categorization
-        var prompt="You are parsing OLUWAFUNTO MOTUNRAYO FALUA bank statement from OPay Nigeria. Return ONLY valid JSON, no markdown. Format: {month:'Jun-Jul 2026',transactions:[{desc:string,amount:number,date:string,cat:string,source:'OPay'}]}. Categories: "+catList+". RULES: income=money credited/received into account from other people or own salary transfer. transportation=uber/bolt/tfare/bus. food_dining=food/restaurants/supermarket/groceries/market. clothing_beauty=clothes/shoes/hair/nails/beauty. church=offerings/tithes. utilities=electricity/NEPA/gas/water. data_airtime=MTN/Airtel/data/airtime/subscription. health=hospital/pharmacy/clinic/medical. loans_transfers=money sent to people as loans. car_auto=fuel/car parts/driving/vehicle/license/AC. bank_charges=card fee/SMS fee/ATM fee/bank charges. giving=donations/charity/gifts to family. education=school fees/courses/training. gifts_shopping=gifts/shopping for others. savings=fixed deposit/investment/savings transfer. AMOUNTS: use the debit column for expenses, credit column for income. Here is the data:\n"+rows.slice(0,150).map(function(r){return r.join(" | ");}).join("\n");
+        var sysMsg="You are a JSON API. You ONLY output raw JSON. Never write sentences. Never explain. Output nothing except the JSON object.";
+        var userMsg="Parse this Nigerian bank statement CSV and return a JSON object. Output ONLY the JSON, nothing else, no explanation.\n\nFormat: {\"month\":\"Jun-Jul 2026\",\"transactions\":[{\"desc\":\"short description\",\"amount\":5000,\"date\":\"27 Jun\",\"cat\":\"food_dining\",\"source\":\"OPay\"}]}\n\nCategory IDs: "+catList+"\n\nRules:\n- Debit/withdrawal = expense\n- Credit/deposit from others = income\n- income: salary, received transfers\n- transportation: uber, tfare, bolt\n- food_dining: food, restaurants, groceries, supermarket\n- clothing_beauty: clothes, hair, nails\n- giving: donations, charity, gifts to family\n- utilities: electricity, NEPA, gas\n- data_airtime: MTN, Airtel, data, airtime\n- health: hospital, clinic, pharmacy\n- car_auto: fuel, car parts, driving school\n- bank_charges: SMS fee, ATM fee, card fee\n- education: school fees, courses\n- savings: fixed deposit, investment\n- loans_transfers: money sent as loans\n\nData:\n"+rawText.slice(0,6000);
         var res=await fetch("https://api.anthropic.com/v1/messages",{
           method:"POST",
           headers:{"Content-Type":"application/json","x-api-key":apiKey,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},
-          body:JSON.stringify({model:"claude-sonnet-4-6",max_tokens:8192,messages:[{role:"user",content:prompt}]})
+          body:JSON.stringify({model:"claude-sonnet-4-6",max_tokens:8192,system:sysMsg,messages:[{role:"user",content:userMsg}]})
         });
         var j=await res.json();
         if(j.error)throw new Error(j.error.message);
-        var text2=(j.content||[]).map(function(i){return i.text||"";}).join("");
+        var raw=(j.content||[]).map(function(i){return i.text||"";}).join("").trim();
+        // Strip any markdown fences
         var bq=String.fromCharCode(96);
-        var cleaned=text2.split(bq+bq+bq+"json").join("").split(bq+bq+bq).join("").trim();
-        try{JSON.parse(cleaned);}catch(e){var lc=cleaned.lastIndexOf("},");if(lc>0)cleaned=cleaned.substring(0,lc+1)+"]}";}
-        var parsed=JSON.parse(cleaned);
+        raw=raw.split(bq+bq+bq+"json").join("").split(bq+bq+bq).join("").trim();
+        // Find the JSON object
+        var start=raw.indexOf("{");
+        var end=raw.lastIndexOf("}");
+        if(start>=0&&end>start)raw=raw.slice(start,end+1);
+        // Repair if truncated
+        try{JSON.parse(raw);}catch(e){
+          var lc=raw.lastIndexOf("},");
+          if(lc>0)raw=raw.slice(0,lc+1)+"]}";
+        }
+        var parsed=JSON.parse(raw);
         var parsedMonth=parsed.month||"Jun-Jul 2026";
         var txnList=(parsed.transactions||[]).map(function(t){return Object.assign({},t,{id:uid(),month:parsedMonth,amount:Number(t.amount)||0});});
         setPreview({month:parsedMonth,txns:txnList});
